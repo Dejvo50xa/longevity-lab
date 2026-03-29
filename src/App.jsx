@@ -165,108 +165,294 @@ function FrostParticles() {
 
 /* ══════════════ ANIMATED CHARACTER (SVG) ══════════════ */
 function HabitCharacter({ inputs }) {
+  /* ── derived metrics ── */
   var ex = inputs.exerciseDays * inputs.exerciseIntensity / 10;
-  var muscleScale = 0.8 + Math.min(ex, 5) * 0.08;
-  var fatScale = Math.max(1.1 - (inputs.dietScore / 10) * 0.2, 0.85);
-  var bodyWidth = 38 * fatScale;
+  var muscle = Math.min(ex / 5, 1);                        /* 0-1  */
+  var fatness = Math.max(1.15 - (inputs.dietScore / 10) * 0.25, 0.82);
+  var health = (inputs.dietScore + inputs.sleepScore + inputs.socialScore + Math.min(inputs.exerciseDays, 5) * 2) / 40;
   var smoking = inputs.smokingStatus === 2;
-  var drinking = inputs.alcoholScore > 7;
-  var healthyGlow = (inputs.dietScore + inputs.sleepScore + inputs.socialScore) / 30;
-  var skinColor = smoking ? "#E8C9A0" : ("rgb(" + Math.round(230 + healthyGlow * 25) + "," + Math.round(190 + healthyGlow * 30) + "," + Math.round(150 + healthyGlow * 20) + ")");
-  var isSleepy = inputs.sleepScore < 3;
-  var isHappy = inputs.socialScore > 6 && inputs.dietScore > 6;
+  var lightSmoker = inputs.smokingStatus === 1;
+  var drinkLvl = inputs.alcoholScore;                      /* 0-10 */
+  var isSleepy = inputs.sleepScore < 4;
+  var isRested = inputs.sleepScore >= 7;
+  var isHappy = inputs.socialScore > 5 && health > 0.5;
+  var isSad = inputs.socialScore < 3;
+  var coldLvl = inputs.coldExposure;
+  var saunaLvl = inputs.saunaSessions;
+  var suppLvl = inputs.supplementScore;
+  var age = inputs.age;
+
+  /* ── skin color: shifts with health, smoking, cold ── */
+  var sr = smoking ? 210 : lightSmoker ? 225 : Math.round(235 + health * 20);
+  var sg = smoking ? 180 : lightSmoker ? 195 : Math.round(195 + health * 35);
+  var sb = smoking ? 145 : lightSmoker ? 160 : Math.round(155 + health * 25);
+  if (coldLvl > 6) { sr = Math.round(sr * 0.92); sg = Math.round(sg * 0.95); sb = Math.round(sb * 1.06); }
+  var skin = "rgb(" + sr + "," + sg + "," + sb + ")";
+  var skinDark = "rgb(" + Math.round(sr * 0.88) + "," + Math.round(sg * 0.88) + "," + Math.round(sb * 0.88) + ")";
+
+  /* ── body dimensions ── */
+  var torsoW = 42 * fatness;
+  var torsoH = 70;
+  var shoulderW = torsoW + 6 + muscle * 14;
+  var armW = 11 + muscle * 5;
+  var legW = 13 + (fatness - 0.82) * 10;
+
+  /* ── cheek flush from exercise/health ── */
+  var cheekOpacity = health > 0.5 ? (health - 0.5) * 0.35 : 0;
+
+  /* ── helper: transition style ── */
+  var tr = { transition: "all 0.45s cubic-bezier(.4,0,.2,1)" };
+
+  /* ── glow color ── */
+  var glowColor = health > 0.6 ? "rgba(43,168,125," + (0.06 + health * 0.1) + ")" : health > 0.35 ? "rgba(59,140,196,0.06)" : "rgba(217,88,67,0.06)";
 
   return (
-    <svg viewBox="0 0 200 280" style={{ width: 180, height: 250, display: "block", margin: "0 auto", transition: "all 0.5s ease" }}>
-      {/* glow behind character */}
+    <svg viewBox="0 0 240 340" style={{ width: 220, height: 310, display: "block", margin: "0 auto" }}>
       <defs>
-        <radialGradient id="charGlow"><stop offset="0%" stopColor={healthyGlow > 0.5 ? "rgba(43,168,125,0.12)" : "rgba(217,88,67,0.08)"} /><stop offset="100%" stopColor="transparent" /></radialGradient>
+        <radialGradient id="cGlow"><stop offset="0%" stopColor={glowColor} /><stop offset="100%" stopColor="transparent" /></radialGradient>
+        <linearGradient id="shirtG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={health > 0.5 ? T.accent : "#8EAABB"} />
+          <stop offset="100%" stopColor={health > 0.5 ? T.accentSoft : "#B0C4D1"} />
+        </linearGradient>
+        <linearGradient id="pantsG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={ex > 3 ? "#2D5F8A" : "#5C7A94"} />
+          <stop offset="100%" stopColor={ex > 3 ? "#1B4965" : "#4A6577"} />
+        </linearGradient>
+        <linearGradient id="hairG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={age > 55 ? "#9CA3AF" : "#2C1810"} />
+          <stop offset="100%" stopColor={age > 55 ? "#B0B7C0" : "#4A3228"} />
+        </linearGradient>
+        <filter id="softShadow"><feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="rgba(12,45,72,0.12)" /></filter>
       </defs>
-      <ellipse cx="100" cy="250" rx="60" ry="12" fill={healthyGlow > 0.5 ? "rgba(43,168,125,0.08)" : "rgba(200,200,200,0.1)"} />
 
-      {/* legs */}
-      <rect x="80" y="195" width="14" height="55" rx="7" fill={skinColor} style={{ transition: "all 0.4s" }} />
-      <rect x="106" y="195" width="14" height="55" rx="7" fill={skinColor} style={{ transition: "all 0.4s" }} />
+      {/* ── platform shadow ── */}
+      <ellipse cx="120" cy="318" rx="55" ry="10" fill="url(#cGlow)" style={tr} />
 
-      {/* shoes */}
-      <ellipse cx="87" cy="252" rx="12" ry="6" fill={ex > 3 ? T.accent : "#888"} style={{ transition: "all 0.4s" }} />
-      <ellipse cx="113" cy="252" rx="12" ry="6" fill={ex > 3 ? T.accent : "#888"} style={{ transition: "all 0.4s" }} />
+      {/* ── LEGS ── */}
+      <rect x={120 - legW / 2 - 10} y="248" width={legW} height="58" rx={legW / 2} fill="url(#pantsG)" style={tr} />
+      <rect x={120 + 10 - legW / 2} y="248" width={legW} height="58" rx={legW / 2} fill="url(#pantsG)" style={tr} />
 
-      {/* body / torso */}
-      <rect x={100 - bodyWidth / 2} y="120" width={bodyWidth} height="80" rx="16" fill={skinColor} style={{ transition: "all 0.4s" }} />
-
-      {/* muscle indicator */}
-      {ex > 2 && <>
-        <ellipse cx={100 - bodyWidth / 2 - 4} cy="148" rx={4 * muscleScale} ry={8 * muscleScale} fill="rgba(0,0,0,0.06)" style={{ transition: "all 0.4s" }} />
-        <ellipse cx={100 + bodyWidth / 2 + 4} cy="148" rx={4 * muscleScale} ry={8 * muscleScale} fill="rgba(0,0,0,0.06)" style={{ transition: "all 0.4s" }} />
+      {/* ── SHOES ── */}
+      <ellipse cx={120 - 10} cy="310" rx={legW / 2 + 4} ry="7" fill={ex > 3 ? T.accent : ex > 1 ? "#7BACC4" : "#999"} style={tr} />
+      <ellipse cx={120 + 10} cy="310" rx={legW / 2 + 4} ry="7" fill={ex > 3 ? T.accent : ex > 1 ? "#7BACC4" : "#999"} style={tr} />
+      {ex > 3 && <>
+        <line x1={120 - 14} y1="308" x2={120 - 6} y2="308" stroke="white" strokeWidth="1" opacity="0.5" />
+        <line x1={120 + 6} y1="308" x2={120 + 14} y2="308" stroke="white" strokeWidth="1" opacity="0.5" />
       </>}
 
-      {/* arms */}
-      <rect x={100 - bodyWidth / 2 - 12} y="125" width="12" height="50" rx="6" fill={skinColor} style={{ transition: "all 0.4s" }} />
-      <rect x={100 + bodyWidth / 2} y="125" width="12" height="50" rx="6" fill={skinColor} style={{ transition: "all 0.4s" }} />
+      {/* ── TORSO (shirt) ── */}
+      <path d={"M" + (120 - shoulderW / 2) + ",170 Q" + (120 - shoulderW / 2 - 2) + ",175 " + (120 - torsoW / 2) + ",245 L" + (120 + torsoW / 2) + ",245 Q" + (120 + shoulderW / 2 + 2) + ",175 " + (120 + shoulderW / 2) + ",170 Q120,160 " + (120 - shoulderW / 2) + ",170Z"} fill="url(#shirtG)" style={tr} filter="url(#softShadow)" />
 
-      {/* head */}
-      <circle cx="100" cy="90" r="32" fill={skinColor} style={{ transition: "all 0.4s" }} />
+      {/* shirt neckline */}
+      <path d={"M" + (120 - 12) + ",168 Q120,178 " + (120 + 12) + ",168"} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
 
-      {/* eyes */}
+      {/* ── MUSCLE DEFINITION on shirt ── */}
+      {muscle > 0.4 && <>
+        <path d={"M" + (120 - shoulderW / 2 + 3) + ",180 Q" + (120 - shoulderW / 2 + 6) + ",200 " + (120 - torsoW / 2 + 5) + ",230"} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1 + muscle * 2} style={tr} />
+        <path d={"M" + (120 + shoulderW / 2 - 3) + ",180 Q" + (120 + shoulderW / 2 - 6) + ",200 " + (120 + torsoW / 2 - 5) + ",230"} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth={1 + muscle * 2} style={tr} />
+      </>}
+      {muscle > 0.7 && <line x1="114" y1="195" x2="126" y2="195" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />}
+
+      {/* ── ARMS ── */}
+      <rect x={120 - shoulderW / 2 - armW + 2} y="170" width={armW} height={52 + muscle * 5} rx={armW / 2} fill={skin} style={tr} />
+      <rect x={120 + shoulderW / 2 - 2} y="170" width={armW} height={52 + muscle * 5} rx={armW / 2} fill={skin} style={tr} />
+
+      {/* bicep curves when muscular */}
+      {muscle > 0.5 && <>
+        <ellipse cx={120 - shoulderW / 2 - armW / 2 + 2} cy="188" rx={2 + muscle * 3} ry={5 + muscle * 4} fill="rgba(0,0,0,0.04)" style={tr} />
+        <ellipse cx={120 + shoulderW / 2 + armW / 2 - 2} cy="188" rx={2 + muscle * 3} ry={5 + muscle * 4} fill="rgba(0,0,0,0.04)" style={tr} />
+      </>}
+
+      {/* ── HANDS ── */}
+      <circle cx={120 - shoulderW / 2 - armW / 2 + 2} cy={224 + muscle * 5} r={5 + muscle} fill={skin} style={tr} />
+      <circle cx={120 + shoulderW / 2 + armW / 2 - 2} cy={224 + muscle * 5} r={5 + muscle} fill={skin} style={tr} />
+
+      {/* ── NECK ── */}
+      <rect x="111" y="132" width="18" height="40" rx="9" fill={skin} style={tr} />
+
+      {/* ── HEAD ── */}
+      <ellipse cx="120" cy="108" rx="34" ry="38" fill={skin} style={tr} filter="url(#softShadow)" />
+
+      {/* ── HAIR ── */}
+      <path d={"M82,100 Q84," + (age > 65 ? "72" : "62") + " 120,58 Q156," + (age > 65 ? "72" : "62") + " 158,100 Q155,78 120,72 Q85,78 82,100Z"} fill="url(#hairG)" style={tr} />
+      {age > 45 && age <= 65 && <>
+        <line x1="96" y1="68" x2="98" y2="80" stroke="#9CA3AF" strokeWidth="1" opacity="0.3" />
+        <line x1="140" y1="69" x2="138" y2="81" stroke="#9CA3AF" strokeWidth="1" opacity="0.3" />
+      </>}
+
+      {/* ── EYEBROWS ── */}
+      <path d={"M98,90 Q105," + (isSad ? "92" : isHappy ? "86" : "89") + " 112,90"} fill="none" stroke={skinDark} strokeWidth="2" strokeLinecap="round" style={tr} />
+      <path d={"M128,90 Q135," + (isSad ? "92" : isHappy ? "86" : "89") + " 142,90"} fill="none" stroke={skinDark} strokeWidth="2" strokeLinecap="round" style={tr} />
+
+      {/* ── EYES ── */}
       {isSleepy ? <>
-        <line x1="87" y1="88" x2="95" y2="88" stroke={T.deep} strokeWidth="2" strokeLinecap="round" />
-        <line x1="105" y1="88" x2="113" y2="88" stroke={T.deep} strokeWidth="2" strokeLinecap="round" />
+        <path d="M100,98 Q106,96 112,98" fill="none" stroke={T.deep} strokeWidth="2.2" strokeLinecap="round" />
+        <path d="M128,98 Q134,96 140,98" fill="none" stroke={T.deep} strokeWidth="2.2" strokeLinecap="round" />
       </> : <>
-        <circle cx="90" cy="86" r="3.5" fill={T.deep} />
-        <circle cx="110" cy="86" r="3.5" fill={T.deep} />
-        <circle cx="91" cy="85" r="1.2" fill={T.white} />
-        <circle cx="111" cy="85" r="1.2" fill={T.white} />
+        {/* eye whites */}
+        <ellipse cx="106" cy="97" rx="7" ry={isRested ? 6 : 5} fill={T.white} style={tr} />
+        <ellipse cx="134" cy="97" rx="7" ry={isRested ? 6 : 5} fill={T.white} style={tr} />
+        {/* iris */}
+        <circle cx="106" cy="97" r="3.8" fill={health > 0.6 ? "#3B7CC4" : "#5A7A8A"} style={tr} />
+        <circle cx="134" cy="97" r="3.8" fill={health > 0.6 ? "#3B7CC4" : "#5A7A8A"} style={tr} />
+        {/* pupil */}
+        <circle cx="106" cy="97" r="2" fill={T.deep} />
+        <circle cx="134" cy="97" r="2" fill={T.deep} />
+        {/* sparkle */}
+        <circle cx="108" cy="95" r="1.3" fill={T.white} opacity={isRested ? "0.9" : "0.5"} />
+        <circle cx="136" cy="95" r="1.3" fill={T.white} opacity={isRested ? "0.9" : "0.5"} />
+        {/* under-eye circles when tired */}
+        {inputs.sleepScore < 5 && <>
+          <path d="M99,102 Q106,105 113,102" fill="none" stroke="rgba(120,100,140,0.15)" strokeWidth={2 + (5 - inputs.sleepScore) * 0.4} style={tr} />
+          <path d="M127,102 Q134,105 141,102" fill="none" stroke="rgba(120,100,140,0.15)" strokeWidth={2 + (5 - inputs.sleepScore) * 0.4} style={tr} />
+        </>}
       </>}
 
-      {/* mouth */}
+      {/* ── NOSE ── */}
+      <path d="M118,104 Q120,110 122,104" fill="none" stroke={skinDark} strokeWidth="1.5" strokeLinecap="round" />
+
+      {/* ── CHEEK FLUSH ── */}
+      <ellipse cx="94" cy="108" rx="8" ry="5" fill={"rgba(220,110,100," + cheekOpacity + ")"} style={tr} />
+      <ellipse cx="146" cy="108" rx="8" ry="5" fill={"rgba(220,110,100," + cheekOpacity + ")"} style={tr} />
+
+      {/* ── MOUTH ── multiple states */}
       {isHappy ?
-        <path d="M90,98 Q100,108 110,98" fill="none" stroke={T.deep} strokeWidth="2" strokeLinecap="round" /> :
-        smoking ?
-        <line x1="92" y1="100" x2="108" y2="100" stroke={T.deep} strokeWidth="2" strokeLinecap="round" /> :
-        <path d="M92,102 Q100,96 108,102" fill="none" stroke={T.deep} strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M108,116 Q120,128 132,116" fill="rgba(180,60,60,0.15)" stroke={T.deep} strokeWidth="2" strokeLinecap="round" style={tr} /> :
+       isSad ?
+        <path d="M108,122 Q120,115 132,122" fill="none" stroke={T.deep} strokeWidth="2" strokeLinecap="round" style={tr} /> :
+       smoking ?
+        <line x1="110" y1="118" x2="130" y2="118" stroke={T.deep} strokeWidth="2" strokeLinecap="round" /> :
+        <path d="M110,118 Q120,121 130,118" fill="none" stroke={T.deep} strokeWidth="1.8" strokeLinecap="round" style={tr} />
       }
 
-      {/* hair */}
-      <path d="M68,78 Q72,50 100,48 Q128,50 132,78" fill={T.deep} opacity="0.8" />
+      {/* ── AGE: wrinkles ── */}
+      {age > 50 && <>
+        <path d="M92,105 Q94,107 96,105" fill="none" stroke={skinDark} strokeWidth="0.8" opacity="0.3" />
+        <path d="M144,105 Q146,107 148,105" fill="none" stroke={skinDark} strokeWidth="0.8" opacity="0.3" />
+      </>}
+      {age > 60 && <>
+        <line x1="100" y1="82" x2="104" y2="84" stroke={skinDark} strokeWidth="0.7" opacity="0.25" />
+        <line x1="136" y1="84" x2="140" y2="82" stroke={skinDark} strokeWidth="0.7" opacity="0.25" />
+      </>}
 
-      {/* cigarette */}
+      {/* ══════ ACCESSORIES & EFFECTS ══════ */}
+
+      {/* ── CIGARETTE ── */}
       {smoking && <>
-        <rect x="108" y="96" width="22" height="4" rx="1" fill="#F5E6D0" />
-        <rect x="126" y="96" width="4" height="4" rx="1" fill="#E85D3A" />
-        <path d="M132,94 Q134,86 130,80 Q133,74 131,68" fill="none" stroke="#BBBBBB" strokeWidth="1.5" opacity="0.5">
-          <animate attributeName="d" values="M132,94 Q134,86 130,80 Q133,74 131,68;M132,94 Q136,84 129,78 Q134,72 130,66;M132,94 Q134,86 130,80 Q133,74 131,68" dur="2s" repeatCount="indefinite" />
+        <rect x="130" y="115" width="24" height="4" rx="1.5" fill="#F5E6D0" />
+        <rect x="150" y="115" width="4" height="4" rx="1" fill="#E85D3A" />
+        <circle cx="152" cy="115" r="2" fill="#FF6B35" opacity="0.6">
+          <animate attributeName="opacity" values="0.6;0.9;0.6" dur="1s" repeatCount="indefinite" />
+        </circle>
+        <path d="M155,113 Q158,103 154,95 Q157,87 155,80" fill="none" stroke="#C0C0C0" strokeWidth="2" opacity="0.35">
+          <animate attributeName="d" values="M155,113 Q158,103 154,95 Q157,87 155,80;M155,113 Q160,101 153,93 Q158,85 154,77;M155,113 Q158,103 154,95 Q157,87 155,80" dur="2.5s" repeatCount="indefinite" />
+        </path>
+        <path d="M156,110 Q161,98 155,89" fill="none" stroke="#D0D0D0" strokeWidth="1.2" opacity="0.2">
+          <animate attributeName="d" values="M156,110 Q161,98 155,89;M156,110 Q163,96 154,87;M156,110 Q161,98 155,89" dur="3s" repeatCount="indefinite" />
         </path>
       </>}
+      {/* light smoker: no cigarette but yellowed teeth hint */}
+      {lightSmoker && <ellipse cx="120" cy="119" rx="5" ry="1" fill="rgba(200,180,100,0.15)" />}
 
-      {/* beer/wine */}
-      {drinking && <>
-        <rect x={100 - bodyWidth / 2 - 22} y="148" width="10" height="18" rx="2" fill="#F5C542" opacity="0.9" />
-        <rect x={100 - bodyWidth / 2 - 23} y="145" width="12" height="5" rx="2" fill="#E8B530" />
-        <rect x={100 - bodyWidth / 2 - 19} y="166" width="4" height="8" rx="1" fill="#CCC" />
+      {/* ── BEER / WINE ── gradual */}
+      {drinkLvl > 4 && <>
+        <g transform={"translate(" + (120 - shoulderW / 2 - armW - 8) + "," + (200 + muscle * 3) + ")"}>
+          {drinkLvl > 7 ? <>
+            {/* full pint glass */}
+            <path d="M0,0 L2,28 L14,28 L16,0Z" fill="rgba(35,55,80,0.15)" />
+            <path d="M1,4 L3,26 L13,26 L15,4Z" fill="#F5C542" opacity="0.85" />
+            <rect x="0" y="-2" width="16" height="5" rx="2" fill="rgba(255,255,255,0.4)" />
+            <rect x="15" y="6" width="5" height="14" rx="2.5" fill="rgba(35,55,80,0.12)" />
+          </> : <>
+            {/* wine glass */}
+            <ellipse cx="7" cy="8" rx="7" ry="8" fill="rgba(35,55,80,0.08)" />
+            <ellipse cx="7" cy="8" rx="5.5" ry="6" fill={"rgba(160,40,50," + (0.2 + (drinkLvl - 4) * 0.1) + ")"} />
+            <rect x="5.5" y="16" width="3" height="10" rx="1" fill="rgba(35,55,80,0.12)" />
+            <rect x="1" y="26" width="12" height="2" rx="1" fill="rgba(35,55,80,0.1)" />
+          </>}
+        </g>
       </>}
+      {/* tipsy red nose at very high alcohol */}
+      {drinkLvl > 8 && <circle cx="120" cy="107" r="4" fill="rgba(210,80,80,0.2)" style={tr} />}
 
-      {/* sauna steam */}
-      {inputs.saunaSessions >= 3 && <>
-        <path d="M70,110 Q68,100 72,92" fill="none" stroke="#DDD" strokeWidth="1.5" opacity="0.3">
-          <animate attributeName="d" values="M70,110 Q68,100 72,92;M68,108 Q72,98 68,90;M70,110 Q68,100 72,92" dur="2.5s" repeatCount="indefinite" />
+      {/* ── SAUNA STEAM ── gradual */}
+      {saunaLvl >= 2 && <g opacity={0.15 + saunaLvl * 0.05}>
+        <path d="M82,155 Q79,140 83,128" fill="none" stroke={T.dim} strokeWidth="2" strokeLinecap="round">
+          <animate attributeName="d" values="M82,155 Q79,140 83,128;M80,153 Q84,138 78,125;M82,155 Q79,140 83,128" dur="2.8s" repeatCount="indefinite" />
         </path>
-        <path d="M130,112 Q132,102 128,94" fill="none" stroke="#DDD" strokeWidth="1.5" opacity="0.3">
-          <animate attributeName="d" values="M130,112 Q132,102 128,94;M132,110 Q128,100 132,92;M130,112 Q132,102 128,94" dur="3s" repeatCount="indefinite" />
+        <path d="M158,152 Q161,137 157,126" fill="none" stroke={T.dim} strokeWidth="2" strokeLinecap="round">
+          <animate attributeName="d" values="M158,152 Q161,137 157,126;M160,150 Q156,136 162,124;M158,152 Q161,137 157,126" dur="3.2s" repeatCount="indefinite" />
         </path>
+        {saunaLvl >= 4 && <path d="M120,155 Q118,142 122,130" fill="none" stroke={T.dim} strokeWidth="1.5" strokeLinecap="round">
+          <animate attributeName="d" values="M120,155 Q118,142 122,130;M122,153 Q116,140 120,128;M120,155 Q118,142 122,130" dur="2.2s" repeatCount="indefinite" />
+        </path>}
+        {saunaLvl >= 5 && <>
+          <circle cx="78" cy="120" r="2" fill={T.dim} opacity="0.15">
+            <animate attributeName="cy" values="120;112;120" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="162" cy="118" r="1.5" fill={T.dim} opacity="0.12">
+            <animate attributeName="cy" values="118;110;118" dur="3.5s" repeatCount="indefinite" />
+          </circle>
+        </>}
+      </g>}
+
+      {/* ── COLD EXPOSURE: snowflakes + goosebumps ── gradual */}
+      {coldLvl > 2 && <g opacity={0.2 + coldLvl * 0.06}>
+        <text x="55" y="168" fontSize={8 + coldLvl * 0.5} fill={T.accent}>{"\u2744"}</text>
+        {coldLvl > 4 && <text x="168" y="155" fontSize={7 + coldLvl * 0.4} fill={T.accent}>{"\u2744"}</text>}
+        {coldLvl > 6 && <>
+          <text x="48" y="135" fontSize="8" fill={T.accentSoft}>{"\u2744"}</text>
+          <text x="175" y="180" fontSize="7" fill={T.accentSoft}>{"\u2744"}</text>
+        </>}
+        {coldLvl > 8 && <>
+          <text x="60" y="200" fontSize="9" fill={T.accent} opacity="0.4">{"\u2744"}</text>
+          <text x="165" y="210" fontSize="7" fill={T.accent} opacity="0.3">{"\u2744"}</text>
+          {/* frost on shoulders */}
+          <line x1={120 - shoulderW / 2} y1="170" x2={120 - shoulderW / 2 + 8} y2="170" stroke={T.ice} strokeWidth="1.5" opacity="0.4" />
+          <line x1={120 + shoulderW / 2 - 8} y1="170" x2={120 + shoulderW / 2} y2="170" stroke={T.ice} strokeWidth="1.5" opacity="0.4" />
+        </>}
+      </g>}
+
+      {/* ── SUPPLEMENTS: pill bottle ── */}
+      {suppLvl > 3 && <g transform={"translate(" + (120 + shoulderW / 2 + armW + 3) + "," + (202 + muscle * 3) + ")"} opacity={0.5 + suppLvl * 0.05}>
+        <rect x="0" y="0" width="10" height="16" rx="2" fill={T.aurora} />
+        <rect x="-1" y="-2" width="12" height="5" rx="2" fill={T.auroraLight} />
+        <text x="5" y="12" textAnchor="middle" fontSize="6" fill="white" fontWeight="bold">+</text>
+        {suppLvl > 6 && <>
+          <circle cx="3" cy="-6" r="2.5" fill={T.warmLight} opacity="0.7" />
+          <circle cx="10" cy="-4" r="2" fill={T.aurora} opacity="0.6" />
+        </>}
+      </g>}
+
+      {/* ── SLEEP ZZZ ── gradual */}
+      {isSleepy && <g>
+        <text x="150" y="80" fontFamily={T.mono} fontSize="10" fill={T.dim} opacity="0.4">z</text>
+        <text x="160" y="70" fontFamily={T.mono} fontSize="13" fill={T.dim} opacity="0.35">z</text>
+        <text x="168" y="58" fontFamily={T.mono} fontSize="16" fill={T.dim} opacity="0.3">z</text>
+      </g>}
+
+      {/* ── SOCIAL: heart ── gradual */}
+      {inputs.socialScore > 4 && <g opacity={0.15 + (inputs.socialScore - 4) * 0.1}>
+        <text x="66" y="90" fontSize={10 + inputs.socialScore * 0.5} fill="#E85D7A">{"\u2665"}</text>
+        {inputs.socialScore > 7 && <text x="160" y="95" fontSize="10" fill="#E85D7A">{"\u2665"}</text>}
+        {inputs.socialScore > 9 && <text x="74" y="160" fontSize="8" fill="#E85D7A">{"\u2665"}</text>}
+      </g>}
+
+      {/* ── EXERCISE: headband + sweat ── */}
+      {ex > 4 && <>
+        <path d={"M84,84 Q120,76 156,84"} fill="none" stroke={T.accent} strokeWidth="3" strokeLinecap="round" opacity="0.7" />
+        {ex > 6 && <>
+          <circle cx="88" cy="90" r="1.5" fill={T.accentSoft} opacity="0.5">
+            <animate attributeName="cy" values="90;98;90" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="152" cy="89" r="1.3" fill={T.accentSoft} opacity="0.4">
+            <animate attributeName="cy" values="89;96;89" dur="2.5s" repeatCount="indefinite" />
+          </circle>
+        </>}
       </>}
 
-      {/* zzz if sleepy */}
-      {isSleepy && <text x="135" y="72" fontFamily={T.mono} fontSize="14" fill={T.dim} opacity="0.5">zzz</text>}
-
-      {/* heart if social */}
-      {inputs.socialScore > 7 && <text x="60" y="82" fontSize="16" opacity="0.6">{"\u2764\uFE0F"}</text>}
-
-      {/* cold snowflakes */}
-      {inputs.coldExposure > 5 && <>
-        <text x="45" y="140" fontSize="10" opacity="0.4">{"\u2744\uFE0F"}</text>
-        <text x="148" y="130" fontSize="8" opacity="0.3">{"\u2744\uFE0F"}</text>
-      </>}
+      {/* ── OVERALL HEALTH AURA ── */}
+      {health > 0.7 && <ellipse cx="120" cy="180" rx={50 + health * 20} ry={100 + health * 20} fill="none" stroke={T.aurora} strokeWidth="1" opacity={0.04 + health * 0.06} style={tr} />}
     </svg>
   );
 }
