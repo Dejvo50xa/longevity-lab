@@ -752,12 +752,12 @@ function DetailModal({ pillarId, onClose }) {
 
 /* ══════════════ EVIDENCE ══════════════ */
 var EVIDENCE = [
-  { year: "2022", title: "Estimating impact of food choices on life expectancy", a: "Fadnes et al.", j: "PLOS Medicine", f: "+10.7 yrs from optimal diet at age 20" },
-  { year: "2015", title: "Sauna bathing and fatal cardiovascular events", a: "Laukkanen et al.", j: "JAMA Internal Medicine", f: "4\u20137x/wk: 50% lower CVD mortality" },
-  { year: "2012", title: "Leisure time physical activity and mortality", a: "Moore et al.", j: "PLOS Medicine", f: "+4.5 yrs from 150 min/wk exercise" },
-  { year: "2024", title: "Sleep regularity and all-cause mortality", a: "Windred et al.", j: "SLEEP", f: "Irregular sleep: 20\u201348% higher death risk" },
-  { year: "2010", title: "Social relationships and mortality risk", a: "Holt-Lunstad et al.", j: "PLOS Medicine", f: "Strong ties: 50% survival increase" },
-  { year: "2019", title: "Vitamin D and Omega-3 supplementation", a: "Manson et al.", j: "New England J of Medicine", f: "Omega-3: 28% fewer heart attacks" },
+  { year: "2022", title: "Estimating impact of food choices on life expectancy", a: "Fadnes et al.", j: "PLOS Medicine", f: "+10.7 yrs from optimal diet at age 20", url: "https://doi.org/10.1371/journal.pmed.1003889" },
+  { year: "2015", title: "Sauna bathing and fatal cardiovascular events", a: "Laukkanen et al.", j: "JAMA Internal Medicine", f: "4\u20137x/wk: 50% lower CVD mortality", url: "https://doi.org/10.1001/jamainternmed.2014.8187" },
+  { year: "2012", title: "Leisure time physical activity and mortality", a: "Moore et al.", j: "PLOS Medicine", f: "+4.5 yrs from 150 min/wk exercise", url: "https://doi.org/10.1371/journal.pmed.1001335" },
+  { year: "2024", title: "Sleep regularity and all-cause mortality", a: "Windred et al.", j: "SLEEP", f: "Irregular sleep: 20\u201348% higher death risk", url: "https://doi.org/10.1093/sleep/zsad253" },
+  { year: "2010", title: "Social relationships and mortality risk", a: "Holt-Lunstad et al.", j: "PLOS Medicine", f: "Strong ties: 50% survival increase", url: "https://doi.org/10.1371/journal.pmed.1000316" },
+  { year: "2019", title: "Vitamin D and Omega-3 supplementation", a: "Manson et al.", j: "New England J of Medicine", f: "Omega-3: 28% fewer heart attacks", url: "https://doi.org/10.1056/NEJMoa1811403" },
 ];
 
 var LBL = { intensity: ["", "Light walk", "", "", "Moderate", "", "", "Vigorous", "", "", "Elite"], cold: ["None", "", "Occasional", "", "", "Regular", "", "", "", "", "Daily"], diet: ["Fast food", "", "", "", "Average", "", "", "", "Plant-rich", "", "Optimal"], sleep: ["Chaotic", "", "", "", "Irregular", "", "", "", "Consistent", "", "Perfect"], supps: ["None", "", "", "Basics", "", "", "", "Targeted", "", "", "Optimised"], social: ["Isolated", "", "", "", "Some", "", "", "", "Strong", "", "Thriving"], smoking: ["Never", "Former", "Current"], alcohol: ["None", "", "", "Light", "", "Moderate", "", "", "Heavy", "", "Excessive"] };
@@ -765,9 +765,9 @@ function lb(a, v) { return a[v] || String(v); }
 
 /* ══════════════ NEW KNOWLEDGE CONTENT ══════════════ */
 var WHY_STATS = [
-  { n: "~10 yrs", l: "average gap between lifespan and healthspan — years lived in poor health" },
-  { n: "80%", l: "of premature heart disease and type 2 diabetes is preventable (WHO)" },
-  { n: "20–30%", l: "of longevity is genetic — the rest is built by daily habits" },
+  { pre: "~", n: 10, suf: " yrs", l: "average gap between lifespan and healthspan — years lived in poor health" },
+  { pre: "", n: 80, suf: "%", l: "of premature heart disease and type 2 diabetes is preventable (WHO)" },
+  { pre: "20–", n: 30, suf: "%", l: "of longevity is genetic — the rest is built by daily habits" },
 ];
 
 var SOLUTION_CARDS = [
@@ -804,15 +804,42 @@ var PROTOCOL = [
 ];
 
 var BIOMARKERS = [
-  { name: "ApoB", optimal: "< 80 mg/dL", why: "Counts every atherogenic particle — a better predictor of cardiovascular risk than LDL-C alone.", freq: "Yearly" },
-  { name: "HbA1c", optimal: "< 5.4%", why: "Three-month average blood glucose. Tracks glycation — sugar damage to proteins that accelerates aging.", freq: "Yearly" },
-  { name: "hs-CRP", optimal: "< 1.0 mg/L", why: "High-sensitivity inflammation marker. Chronic low-grade inflammation drives most age-related disease.", freq: "Yearly" },
-  { name: "Fasting insulin", optimal: "< 6 mIU/L", why: "Rises years before glucose does — the earliest practical warning of insulin resistance.", freq: "Yearly" },
-  { name: "VO2 max", optimal: "Top 25% for age", why: "Strongest single predictor of all-cause mortality. Low-to-high fitness cuts mortality risk up to 4-fold.", freq: "1–2×/yr" },
-  { name: "Vitamin D", optimal: "40–60 ng/mL", why: "Hormone-like regulator of immune function and bone health. Most office workers run low.", freq: "Yearly" },
-  { name: "Blood pressure", optimal: "< 120/80", why: "Each 20/10 mmHg above 115/75 roughly doubles cardiovascular mortality risk. Measure at home, rested.", freq: "Monthly" },
-  { name: "Lp(a)", optimal: "< 50 mg/dL", why: "Genetically set cholesterol particle, elevated in ~20% of people. High values warrant aggressive ApoB control.", freq: "Once in life" },
-  { name: "Grip strength", optimal: "Above age median", why: "Simple proxy for total muscle mass and neuromuscular health — robustly predicts late-life independence.", freq: "Quarterly" },
+  { name: "ApoB", optimal: "< 80 mg/dL", why: "Counts every atherogenic particle — a better predictor of cardiovascular risk than LDL-C alone.", freq: "Yearly",
+    what: "Every particle capable of depositing cholesterol into your artery wall — LDL, VLDL, IDL, and Lp(a) — carries exactly one ApoB protein. Measuring ApoB therefore counts the actual number of artery-damaging particles, while standard LDL-C only weighs their cargo. Two people with identical LDL-C can differ two-fold in particle count, and it is the particle number that drives atherosclerosis.",
+    improve: ["Replace saturated fat with olive oil, nuts, and fatty fish", "Add 10g+ of soluble fiber daily (oats, legumes, psyllium)", "Lose visceral fat — even 5% body weight moves ApoB meaningfully", "If lifestyle isn't enough, modern lipid-lowering therapy is cheap and well-studied — discuss with your physician"],
+    test: "An inexpensive add-on to any standard lipid panel — you usually have to ask for it explicitly." },
+  { name: "HbA1c", optimal: "< 5.4%", why: "Three-month average blood glucose. Tracks glycation — sugar damage to proteins that accelerates aging.", freq: "Yearly",
+    what: "Red blood cells live about 120 days, and glucose gradually sticks to their hemoglobin in proportion to average blood sugar. HbA1c is the percentage that's been 'sugar-coated' — a 3-month moving average of glycemic control, and a direct window into glycation, the same protein-damaging process that stiffens arteries and skin with age.",
+    improve: ["Walk 10–15 minutes after meals — post-prandial spikes drive the average", "Front-load protein and vegetables, eat refined carbs last", "Build muscle: it's your largest glucose disposal site", "Protect sleep — one bad night measurably worsens next-day glucose control"],
+    test: "Standard panel item. Note: anemia and altitude can skew results; fasting insulin adds context." },
+  { name: "hs-CRP", optimal: "< 1.0 mg/L", why: "High-sensitivity inflammation marker. Chronic low-grade inflammation drives most age-related disease.", freq: "Yearly",
+    what: "C-reactive protein is produced by the liver in response to inflammatory signals (mainly IL-6). The high-sensitivity assay detects the chronic low-grade smolder — 'inflammaging' — that accelerates atherosclerosis, dementia, and frailty. Values above 3 mg/L roughly double cardiovascular risk versus values below 1.",
+    improve: ["Regular Zone 2 exercise is the most reliable CRP-lowerer known", "Lose visceral fat — adipose tissue is an inflammation factory", "Fix oral health: gum disease quietly elevates CRP", "Prioritize omega-3 intake (fatty fish 2–3×/week)"],
+    test: "Skip testing within 2–3 weeks of any infection, injury, or hard race — acute spikes swamp the baseline signal." },
+  { name: "Fasting insulin", optimal: "< 6 mIU/L", why: "Rises years before glucose does — the earliest practical warning of insulin resistance.", freq: "Yearly",
+    what: "When cells grow numb to insulin, the pancreas compensates by secreting more — keeping glucose normal while insulin quietly climbs. That compensation phase can run 10+ years before glucose ever looks abnormal, which makes fasting insulin the earliest practical alarm for metabolic disease. Combined with fasting glucose it yields HOMA-IR, a standard insulin-resistance index.",
+    improve: ["Strength training — more muscle means more insulin-independent glucose uptake", "Zone 2 cardio improves insulin sensitivity for 24–48h per session", "Reduce refined carbohydrate load and liquid sugar to zero", "A 12-hour overnight eating pause is a gentle, sustainable start"],
+    test: "Cheap but rarely included by default — ask for it with your annual panel." },
+  { name: "VO2 max", optimal: "Top 25% for age", why: "Strongest single predictor of all-cause mortality. Low-to-high fitness cuts mortality risk up to 4-fold.", freq: "1–2×/yr",
+    what: "The maximum volume of oxygen your body can transport and use per minute, integrating heart, lungs, blood, and mitochondria into one number. In the JAMA cohort of 122,000 patients, moving from the bottom to the top fitness quartile was associated with a ~4-fold mortality difference — a bigger effect than smoking, diabetes, or hypertension.",
+    improve: ["Base: 3–4 weekly Zone 2 sessions of 45–60 minutes", "Sharpen: 1–2 weekly interval sessions (4×4 min hard / 3 min easy is the classic)", "Expect 10–25% improvement within 4–6 months from a low base", "Decline is ~10%/decade if untrained — but trainable at any age"],
+    test: "Gold standard is a lab ramp test with a mask; good-enough estimates come from a Cooper 12-min run test or a sports watch." },
+  { name: "Vitamin D", optimal: "40–60 ng/mL", why: "Hormone-like regulator of immune function and bone health. Most office workers run low.", freq: "Yearly",
+    what: "Technically a steroid hormone, not a vitamin: it regulates 200+ genes involved in immune function, calcium handling, and muscle. Synthesized in skin under UVB — which is why indoor lifestyles and northern winters leave a large share of adults below 30 ng/mL.",
+    improve: ["Midday sun on arms and legs, 10–20 minutes several times weekly (no burn)", "D3 supplementation 1000–2000 IU/day if tested low; take with a fat-containing meal", "Fatty fish and egg yolks contribute modestly", "Retest after 3 months — response varies several-fold between people"],
+    test: "Ask for 25-hydroxyvitamin D. Mind the units: ng/mL × 2.5 = nmol/L." },
+  { name: "Blood pressure", optimal: "< 120/80", why: "Each 20/10 mmHg above 115/75 roughly doubles cardiovascular mortality risk. Measure at home, rested.", freq: "Monthly",
+    what: "The force your blood exerts on artery walls — and the most underrated longevity number you can measure for free. Risk scales continuously: there is no safe 'high-normal.' Office readings mislead in both directions (white-coat and masked hypertension), so home measurement is the standard of care.",
+    improve: ["Sodium down, potassium up (vegetables, legumes, dairy)", "Aerobic exercise lowers systolic 5–8 mmHg — comparable to a first-line drug", "Alcohol reduction has a dose-dependent effect", "Snoring + high BP? Get screened for sleep apnea — it's a major hidden driver"],
+    test: "Validated upper-arm cuff, seated, 5 minutes rest, feet flat, average of 2–3 readings, morning and evening for a week." },
+  { name: "Lp(a)", optimal: "< 50 mg/dL", why: "Genetically set cholesterol particle, elevated in ~20% of people. High values warrant aggressive ApoB control.", freq: "Once in life",
+    what: "An LDL-like particle with an extra protein tail that makes it both more artery-damaging and more clot-promoting. Levels are ~90% genetically determined and barely respond to lifestyle — which is exactly why everyone should measure it once: one in five people carries elevated levels, usually without knowing.",
+    improve: ["Lifestyle barely moves Lp(a) itself — so lower everything around it", "Drive ApoB well below standard targets to compensate", "Be aggressive on blood pressure and never smoke", "Targeted therapies (e.g. pelacarsen) are in late-stage trials — worth following if you're elevated"],
+    test: "Once in a lifetime is enough unless treatment changes. If high, siblings and children should test too." },
+  { name: "Grip strength", optimal: "Above age median", why: "Simple proxy for total muscle mass and neuromuscular health — robustly predicts late-life independence.", freq: "Quarterly",
+    what: "A 10-second squeeze of a dynamometer turns out to predict all-cause mortality, cardiovascular events, and future disability with surprising power — not because hands matter per se, but because grip is an honest census of total muscle mass, motor-neuron health, and protein status.",
+    improve: ["Progressive resistance training 2–3×/week — compound pulls especially (rows, deadlifts)", "Dead hangs and farmer carries train grip directly", "Protein ~1.6 g/kg/day, spread across meals", "It responds within weeks at any age — including your 90s"],
+    test: "A dynamometer costs ~€25. Test both hands, best of three. Men <40: aim 45+ kg; women: 27+ kg; targets decline gently with age." },
 ];
 
 var MYTHS = [
@@ -836,6 +863,80 @@ var FAQS = [
   { q: "Cardio or strength — which matters more?", a: "Both, for different reasons. VO2 max is the strongest mortality predictor; muscle mass and strength protect independence, bones, and metabolic health late in life. The evidence-based split: ~80% easy Zone 2 volume, 1–2 HIIT sessions, and 2–3 strength sessions per week." },
   { q: "How accurate is the calculator?", a: "It applies effect sizes from published meta-analyses to population baselines — useful for comparing your habits and seeing relative leverage, not for predicting your personal date. Individual biology, environment, and luck all matter. Treat the output as a compass, not a clock." },
 ];
+
+/* ══════════════ DEEP CONTENT: HALLMARKS & GLOSSARY ══════════════ */
+var HALLMARKS = [
+  { icon: "\u{1F9EC}", name: "Genomic instability", desc: "DNA damage accumulates faster than repair can keep up. Exercise and sleep boost repair pathways; smoking and excess UV overwhelm them.", pillars: "Exercise · Sleep" },
+  { icon: "⏳", name: "Telomere attrition", desc: "Protective chromosome caps shorten with each cell division. Chronic stress accelerates loss; fitness correlates with longer telomeres.", pillars: "Exercise · Social" },
+  { icon: "\u{1F39B}️", name: "Epigenetic alterations", desc: "The software layer on your DNA drifts with age — genes switch on and off wrongly. Diet, exercise, and sleep measurably reshape methylation patterns.", pillars: "Nutrition · Sleep" },
+  { icon: "\u{1F4E6}", name: "Loss of proteostasis", desc: "Misfolded proteins aggregate (think amyloid). Heat-shock proteins from sauna and exercise help refold or clear them.", pillars: "Sauna · Exercise" },
+  { icon: "♻️", name: "Disabled macroautophagy", desc: "Cellular recycling slows, junk accumulates. Fasting periods, exercise, and deep sleep are the strongest known autophagy activators.", pillars: "Nutrition · Sleep" },
+  { icon: "\u{1F37D}️", name: "Deregulated nutrient sensing", desc: "Insulin/mTOR/AMPK pathways lose calibration under constant caloric surplus. Time between meals and muscle mass restore sensitivity.", pillars: "Nutrition · Exercise" },
+  { icon: "\u{1F50B}", name: "Mitochondrial dysfunction", desc: "Cellular power plants decline in number and efficiency. Zone 2 training is the single best stimulus for building new mitochondria.", pillars: "Exercise · Cold" },
+  { icon: "\u{1F9DF}", name: "Cellular senescence", desc: "Damaged 'zombie cells' refuse to die and secrete inflammatory signals. Exercise reduces senescent cell burden in humans.", pillars: "Exercise · Nutrition" },
+  { icon: "\u{1F331}", name: "Stem cell exhaustion", desc: "Tissue repair capacity dwindles. Sleep is when stem cell pools regenerate; chronic inflammation drains them.", pillars: "Sleep · Nutrition" },
+  { icon: "\u{1F4E1}", name: "Altered communication", desc: "Hormonal and neural signaling degrades between organs. Social connection and exercise maintain neuroendocrine signaling.", pillars: "Social · Exercise" },
+  { icon: "\u{1F525}", name: "Chronic inflammation", desc: "'Inflammaging' — low-grade systemic inflammation that drives nearly every age-related disease. Tracked by hs-CRP; lowered by all seven pillars.", pillars: "All pillars" },
+  { icon: "\u{1F9A0}", name: "Dysbiosis", desc: "Gut microbiome diversity collapses with poor diet and age, weakening the intestinal barrier. Fiber and fermented foods rebuild it.", pillars: "Nutrition" },
+];
+
+var GLOSSARY = [
+  { term: "Autophagy", def: "The cell's recycling program — damaged components are broken down and reused. Activated by fasting, exercise, and deep sleep." },
+  { term: "AMPK", def: "An energy-sensing enzyme that switches cells into 'repair and recycle' mode. Activated by exercise and caloric deficit." },
+  { term: "mTOR", def: "The growth switch — builds muscle when stimulated, but chronic activation suppresses cellular cleanup. The art is cycling it, not silencing it." },
+  { term: "NAD+", def: "A coenzyme essential for energy production and DNA repair that declines ~50% by midlife. Exercise raises it naturally; supplements remain unproven." },
+  { term: "Telomeres", def: "Protective caps on chromosome ends that shorten with each cell division — one of several biological 'clocks'." },
+  { term: "Senescent cells", def: "Old, damaged cells that stop dividing but refuse to die, leaking inflammatory signals. Nicknamed zombie cells." },
+  { term: "VO2 max", def: "The maximum oxygen your body can use per minute — the single strongest fitness predictor of lifespan." },
+  { term: "Zone 2", def: "Easy-conversational cardio intensity (~60–70% max HR). The foundation layer that builds mitochondria and fat-burning capacity." },
+  { term: "HRV", def: "Heart-rate variability — beat-to-beat timing variation reflecting nervous-system recovery. Higher generally = better recovered." },
+  { term: "ApoB", def: "The protein tag on every artery-clogging particle. Counting particles (ApoB) beats weighing cargo (LDL-C)." },
+  { term: "Glycation / AGEs", def: "Sugar molecules sticking to proteins, forming Advanced Glycation End-products that stiffen tissues and accelerate aging." },
+  { term: "BDNF", def: "Brain-derived neurotrophic factor — 'fertilizer for neurons.' Spikes with intense exercise; supports memory and mood." },
+  { term: "Sarcopenia", def: "Age-related muscle loss, ~3–8% per decade after 30. The main reversible cause of late-life frailty." },
+  { term: "Epigenetic clock", def: "An age estimate read from DNA methylation patterns. Research-grade for now — interesting, not yet actionable." },
+  { term: "Hormesis", def: "Beneficial stress: a dose of heat, cold, or exertion that triggers adaptation and leaves you stronger. The mechanism behind sauna and ice baths." },
+  { term: "Mitochondrial biogenesis", def: "Creating new cellular power plants — the key adaptation to Zone 2 training, driven by the master regulator PGC-1α." },
+  { term: "Insulin resistance", def: "Cells stop responding to insulin, forcing the pancreas to over-produce. The silent root of most metabolic disease." },
+  { term: "Blue Zones", def: "Five regions (Okinawa, Sardinia, Nicoya, Ikaria, Loma Linda) where living past 100 is ~10× more common than in the West." },
+  { term: "Inflammaging", def: "Chronic low-grade inflammation that rises with age and drives cardiovascular disease, dementia, and frailty. Tracked via hs-CRP." },
+  { term: "Polarized training", def: "The 80/20 split: most cardio easy, a little very hard, nothing in the dead middle. How endurance elites — and longevity-minded amateurs — train." },
+];
+
+/* ══════════════ MOTION PRIMITIVES ══════════════ */
+function Reveal({ children, delay, style }) {
+  var _r = useReveal(0.08), ref = _r[0], vis = _r[1];
+  return <div ref={ref} style={{ opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(26px)", transition: "opacity 0.7s ease " + (delay || 0) + "s, transform 0.7s cubic-bezier(.4,0,.2,1) " + (delay || 0) + "s", ...style }}>{children}</div>;
+}
+
+function CountUp({ to, pre, suf, dec, dur }) {
+  if (dur === undefined) dur = 1400;
+  var _r = useReveal(0.4), ref = _r[0], vis = _r[1];
+  var _s = useState(0), v = _s[0], setV = _s[1];
+  useEffect(function () {
+    if (!vis) return;
+    var start = performance.now(), raf;
+    function tick(now) { var t = Math.min((now - start) / dur, 1); setV(to * (1 - Math.pow(1 - t, 3))); if (t < 1) raf = requestAnimationFrame(tick); }
+    raf = requestAnimationFrame(tick);
+    return function () { cancelAnimationFrame(raf); };
+  }, [vis, to, dur]);
+  return <span ref={ref}>{(pre || "") + v.toFixed(dec || 0) + (suf || "")}</span>;
+}
+
+function ScrollProgress() {
+  var ref = useRef(null);
+  useEffect(function () {
+    function onScroll() {
+      var h = document.documentElement;
+      var p = h.scrollTop / (h.scrollHeight - h.clientHeight);
+      if (ref.current) ref.current.style.width = (p * 100).toFixed(2) + "%";
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return function () { window.removeEventListener("scroll", onScroll); };
+  }, []);
+  return <div style={{ position: "absolute", bottom: -1, left: 0, height: 2.5, width: "100%", pointerEvents: "none" }}><div ref={ref} style={{ height: "100%", width: "0%", background: "linear-gradient(90deg," + T.accent + "," + T.aurora + ")", borderRadius: 2 }} /></div>;
+}
 
 /* ══════════════ NEW UI PRIMITIVES ══════════════ */
 function Eyebrow({ children, light }) {
@@ -884,11 +985,75 @@ function Faq({ q, a, light }) {
   );
 }
 
+/* ══════════════ BIOMARKER MODAL ══════════════ */
+function BiomarkerModal({ marker, onClose }) {
+  if (!marker) return null;
+  useEffect(function () { document.body.style.overflow = "hidden"; return function () { document.body.style.overflow = ""; }; }, []);
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
+      <div style={{ position: "absolute", inset: 0, background: "rgba(12,45,72,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
+      <div onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 620, width: "100%", maxHeight: "86vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25)", padding: "32px 36px 36px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+          <div>
+            <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: T.accent, marginBottom: 4 }}>Biomarker deep dive</div>
+            <h2 style={{ fontFamily: T.sans, fontSize: 26, fontWeight: 700, color: T.deep, letterSpacing: -0.6 }}>{marker.name}</h2>
+          </div>
+          <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 99, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, lineHeight: 1, flexShrink: 0 }}>&times;</button>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+          <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.aurora, background: "rgba(43,168,125,0.08)", border: "1px solid rgba(43,168,125,0.2)", borderRadius: 99, padding: "5px 14px" }}>Optimal: {marker.optimal}</span>
+          <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 600, color: T.sub, background: T.faint, border: "1px solid " + T.glassBorder, borderRadius: 99, padding: "5px 14px" }}>Test: {marker.freq}</span>
+        </div>
+        <h3 style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, marginBottom: 8 }}>What it tells you</h3>
+        <p style={{ fontSize: 13.5, lineHeight: 1.8, color: T.sub, marginBottom: 20 }}>{marker.what}</p>
+        <h3 style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, marginBottom: 10 }}>How to improve it</h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+          {marker.improve.map(function (it, i) { return (
+            <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <span style={{ color: T.aurora, fontWeight: 700, flexShrink: 0, fontSize: 13 }}>✓</span>
+              <span style={{ fontSize: 13, lineHeight: 1.65, color: T.sub }}>{it}</span>
+            </div>); })}
+        </div>
+        <div style={{ padding: "14px 18px", borderRadius: 14, background: T.faint, border: "1px solid " + T.glassBorder }}>
+          <span style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Testing notes</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.65, color: T.sub }}>{marker.test}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════ GLOSSARY (searchable) ══════════════ */
+function GlossarySection() {
+  var _s = useState(""), q = _s[0], setQ = _s[1];
+  var filtered = GLOSSARY.filter(function (g) { return (g.term + " " + g.def).toLowerCase().indexOf(q.toLowerCase()) !== -1; });
+  return (
+    <section id="glossary" style={{ padding: "96px 0", background: T.bgAlt }}>
+      <div className="mx" style={{ maxWidth: 920 }}>
+        <SectionHead eyebrow="Speak the language" title="Longevity glossary" sub="Every term you'll meet in the research — and in the deep dives above — in plain words." />
+        <div style={{ maxWidth: 420, margin: "0 auto 32px", position: "relative" }}>
+          <span style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", color: T.dim, fontSize: 14 }}>{"\u{1F50D}"}</span>
+          <input value={q} onChange={function (e) { setQ(e.target.value); }} placeholder={"Search " + GLOSSARY.length + " terms…"} style={{ width: "100%", padding: "13px 20px 13px 46px", borderRadius: 999, border: "1.5px solid " + T.glassBorder, fontFamily: T.sans, fontSize: 14, outline: "none", background: T.white, color: T.deep }} />
+        </div>
+        <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
+          {filtered.map(function (g, i) { return (
+            <div key={g.term} className="liftcard" style={{ padding: "18px 20px", borderRadius: 16, background: T.white, border: "1px solid " + T.glassBorder }}>
+              <div style={{ fontFamily: T.sans, fontSize: 14.5, fontWeight: 700, color: T.accent, marginBottom: 6 }}>{g.term}</div>
+              <p style={{ fontSize: 12.5, lineHeight: 1.7, color: T.sub }}>{g.def}</p>
+            </div>); })}
+        </div>
+        {filtered.length === 0 && <p style={{ textAlign: "center", color: T.dim, fontSize: 13, marginTop: 10 }}>No terms match &ldquo;{q}&rdquo; — try a shorter query.</p>}
+      </div>
+    </section>
+  );
+}
+
 /* ═══════════════════════════ MAIN APP ═══════════════════════════ */
 export default function App() {
   var _s = useState(DEFAULT_INPUTS), inputs = _s[0], setInputs = _s[1];
   var _e = useState(false), emailSent = _e[0], setEmailSent = _e[1];
   var _m = useState(null), modal = _m[0], setModal = _m[1];
+  var _bm = useState(null), bioModal = _bm[0], setBioModal = _bm[1];
   var calcRef = useRef(null);
   var set = useCallback(function (k, v) { setInputs(function (p) { var n = {}; for (var x in p) n[x] = p[x]; n[k] = v; return n; }); }, []);
   var result = useMemo(function () { return calcLifespan(inputs); }, [inputs]);
@@ -901,19 +1066,21 @@ export default function App() {
 
   return (
     <>
-      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navlinks{display:none!important}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n      "}</style>
+      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navlinks{display:none!important}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n@keyframes floaty{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(1.06)}100%{transform:translate(12px,-10px) scale(0.98)}}\n@keyframes marq{to{transform:translateX(-50%)}}\n.marq{display:flex;gap:56px;width:max-content;animation:marq 26s linear infinite;align-items:center}\n.marq:hover{animation-play-state:paused}\n.gradtxt{background:linear-gradient(95deg,#3B8CC4 10%,#2BA87D 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.navlink{position:relative}\n.navlink::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;border-radius:2px;background:#3B8CC4;transition:width 0.25s ease}\n.navlink:hover::after{width:100%}\n.liftcard{transition:transform 0.3s cubic-bezier(.4,0,.2,1),box-shadow 0.3s ease,border-color 0.3s ease}\n.liftcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(12,45,72,0.12),0 2px 8px rgba(12,45,72,0.06)!important;border-color:rgba(100,150,200,0.4)!important}\n      "}</style>
 
       {modal && <DetailModal pillarId={modal} onClose={function () { setModal(null); }} />}
+      {bioModal && <BiomarkerModal marker={bioModal} onClose={function () { setBioModal(null); }} />}
 
       {/* NAV — fixed glass bar */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(245,248,250,0.82)", backdropFilter: T.blur, WebkitBackdropFilter: T.blur, borderBottom: "1px solid " + T.glassBorder }}>
         <div className="mx" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 28px" }}>
           <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15.5, color: T.deep, cursor: "pointer" }} onClick={function () { window.scrollTo({ top: 0, behavior: "smooth" }); }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
           <div className="navlinks" style={{ display: "flex", gap: 26, alignItems: "center" }}>
-            {[["Science", "pillars"], ["Protocol", "protocol"], ["Biomarkers", "biomarkers"], ["FAQ", "faq"]].map(function (l) { return <span key={l[1]} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13.5, fontWeight: 600, color: T.mid, cursor: "pointer" }}>{l[0]}</span>; })}
+            {[["Science", "pillars"], ["Protocol", "protocol"], ["Biomarkers", "biomarkers"], ["Glossary", "glossary"], ["FAQ", "faq"]].map(function (l) { return <span key={l[1]} className="navlink" onClick={function () { goTo(l[1]); }} style={{ fontSize: 13.5, fontWeight: 600, color: T.mid, cursor: "pointer" }}>{l[0]}</span>; })}
           </div>
           <PillBtn primary onClick={scrollCalc}>Calculate now</PillBtn>
         </div>
+        <ScrollProgress />
       </nav>
 
       {/* HERO */}
@@ -924,7 +1091,7 @@ export default function App() {
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.aurora, display: "inline-block" }} />
             <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.sub, letterSpacing: 1.2, textTransform: "uppercase" }}>Evidence-based healthspan, no hype</span>
           </div>
-          <h1 style={{ fontFamily: T.sans, fontSize: "clamp(38px,6.5vw,68px)", fontWeight: 700, color: T.deep, lineHeight: 1.05, marginBottom: 22, letterSpacing: -2 }}>Your wealth is<br />measured in years</h1>
+          <h1 style={{ fontFamily: T.sans, fontSize: "clamp(38px,6.5vw,68px)", fontWeight: 700, color: T.deep, lineHeight: 1.05, marginBottom: 22, letterSpacing: -2 }}>Your wealth is<br /><span className="gradtxt">measured in years</span></h1>
           <p style={{ fontSize: "clamp(15px,1.8vw,18.5px)", color: T.sub, lineHeight: 1.78, maxWidth: 580, margin: "0 auto 38px" }}>From your first habit to a lifelong protocol, Longevity Lab gives you simple, research-backed tools to build, manage, and preserve your healthspan over time.</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 52 }}>
             <PillBtn primary big onClick={scrollCalc} style={{ animation: "gp 3s ease-in-out infinite" }}>Calculate my lifespan</PillBtn>
@@ -943,16 +1110,16 @@ export default function App() {
               </div>); })}
           </div>
         </div>
-        <div style={{ position: "absolute", top: "-12%", right: "-6%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(59,140,196,0.06),transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-10%", left: "-8%", width: 580, height: 580, borderRadius: "50%", background: "radial-gradient(circle,rgba(43,168,125,0.04),transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "-12%", right: "-6%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(59,140,196,0.07),transparent 70%)", pointerEvents: "none", animation: "floaty 16s ease-in-out infinite alternate" }} />
+        <div style={{ position: "absolute", bottom: "-10%", left: "-8%", width: 580, height: 580, borderRadius: "50%", background: "radial-gradient(circle,rgba(43,168,125,0.05),transparent 70%)", pointerEvents: "none", animation: "floaty 20s ease-in-out infinite alternate-reverse" }} />
       </section>
 
-      {/* PUBLISHED-IN STRIP */}
-      <div style={{ padding: "20px 0", borderBottom: "1px solid " + T.glassBorder, background: T.white }}>
-        <div className="mx" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 36, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: T.mono, fontSize: 9.5, color: T.dim, letterSpacing: 2, textTransform: "uppercase" }}>Research from</span>
-          {["JAMA Internal Medicine", "PLOS Medicine", "New England Journal of Medicine", "SLEEP Journal"].map(function (j) { return <span key={j} style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 700, color: "#B9C9D6", letterSpacing: 0.3 }}>{j}</span>; })}
+      {/* PUBLISHED-IN MARQUEE */}
+      <div style={{ padding: "20px 0", borderBottom: "1px solid " + T.glassBorder, background: T.white, overflow: "hidden", position: "relative" }}>
+        <div className="marq">
+          {[0, 1].map(function (rep) { return ["JAMA Internal Medicine", "PLOS Medicine", "New England Journal of Medicine", "SLEEP Journal", "The Lancet Public Health", "Circulation", "Nature Aging", "BMJ"].map(function (j) { return <span key={rep + j} style={{ fontFamily: T.sans, fontSize: 14, fontWeight: 700, color: "#B9C9D6", letterSpacing: 0.3, whiteSpace: "nowrap" }}>{j}</span>; }); })}
         </div>
+        <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(90deg," + T.white + " 0%,transparent 8%,transparent 92%," + T.white + " 100%)" }} />
       </div>
 
       {/* WHY LONGEVITY — narrative band */}
@@ -967,10 +1134,12 @@ export default function App() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {WHY_STATS.map(function (s, i) { return (
-                <div key={i} style={{ ...gc("20px 24px"), display: "flex", alignItems: "center", gap: 18 }}>
-                  <div style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: T.aurora, whiteSpace: "nowrap" }}>{s.n}</div>
-                  <div style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.55 }}>{s.l}</div>
-                </div>); })}
+                <Reveal key={i} delay={i * 0.12}>
+                  <div className="liftcard" style={{ ...gc("20px 24px"), display: "flex", alignItems: "center", gap: 18 }}>
+                    <div style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: T.aurora, whiteSpace: "nowrap", minWidth: 92 }}><CountUp to={s.n} pre={s.pre} suf={s.suf} /></div>
+                    <div style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.55 }}>{s.l}</div>
+                  </div>
+                </Reveal>); })}
             </div>
           </div>
         </div>
@@ -982,12 +1151,14 @@ export default function App() {
           <SectionHead eyebrow="The approach" title="Science is the answer. This is how you get there" sub="A focused platform for people who want to build long-term health — not chase trends, not biohack blindly, not guess." />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
             {SOLUTION_CARDS.map(function (c, i) { return (
-              <div key={i} style={{ ...gc("30px 28px"), display: "flex", flexDirection: "column" }}>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: T.faint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18 }}>{c.icon}</div>
-                <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.4, marginBottom: 10 }}>{c.title}</h3>
-                <p style={{ fontSize: 13.5, lineHeight: 1.75, color: T.sub, flex: 1, marginBottom: 16 }}>{c.body}</p>
-                <span onClick={function () { goTo(c.link.slice(1)); }} style={{ fontSize: 13, color: T.accent, fontWeight: 600, cursor: "pointer" }}>{c.cta}</span>
-              </div>); })}
+              <Reveal key={i} delay={i * 0.14} style={{ height: "100%" }}>
+                <div className="liftcard" style={{ ...gc("30px 28px"), display: "flex", flexDirection: "column", height: "100%" }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: T.faint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18 }}>{c.icon}</div>
+                  <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.4, marginBottom: 10 }}>{c.title}</h3>
+                  <p style={{ fontSize: 13.5, lineHeight: 1.75, color: T.sub, flex: 1, marginBottom: 16 }}>{c.body}</p>
+                  <span onClick={function () { goTo(c.link.slice(1)); }} style={{ fontSize: 13, color: T.accent, fontWeight: 600, cursor: "pointer" }}>{c.cta}</span>
+                </div>
+              </Reveal>); })}
           </div>
         </div>
       </section>
@@ -1077,7 +1248,8 @@ export default function App() {
           <SectionHead eyebrow="Getting started" title="Set up in 30 days, built for 30 years" sub="One theme per week, a few small actions per day. Compliance beats perfection — this is the on-ramp, not the destination." />
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {PROTOCOL.map(function (w, i) { return (
-              <div key={i} style={{ ...gc("26px 30px"), display: "grid", gridTemplateColumns: "120px 1fr", gap: 24 }} className="er">
+              <Reveal key={i} delay={i * 0.1}>
+              <div style={{ ...gc("26px 30px"), display: "grid", gridTemplateColumns: "120px 1fr", gap: 24 }} className="er liftcard">
                 <div>
                   <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase" }}>{w.week}</div>
                   <div style={{ fontFamily: T.sans, fontSize: 19, fontWeight: 700, color: w.color, letterSpacing: -0.4, marginTop: 2 }}>{w.theme}</div>
@@ -1089,7 +1261,8 @@ export default function App() {
                       <span style={{ fontSize: 13.5, color: T.sub, lineHeight: 1.65 }}>{it}</span>
                     </div>); })}
                 </div>
-              </div>); })}
+              </div>
+              </Reveal>); })}
           </div>
         </div>
       </section>
@@ -1100,14 +1273,19 @@ export default function App() {
           <SectionHead light eyebrow="Measure what matters" title="Nine numbers worth knowing" sub="Feelings lie; bloodwork doesn't. These markers catch problems a decade before symptoms — most are available in one standard panel." />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
             {BIOMARKERS.map(function (b, i) { return (
-              <div key={i} style={{ padding: "22px 24px", borderRadius: T.radius, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(140,170,200,0.2)" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                  <span style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.white }}>{b.name}</span>
-                  <span style={{ fontFamily: T.mono, fontSize: 10, color: T.ice, opacity: 0.7 }}>{b.freq}</span>
+              <Reveal key={i} delay={(i % 3) * 0.1} style={{ height: "100%" }}>
+                <div onClick={function () { setBioModal(b); }} style={{ padding: "22px 24px", borderRadius: T.radius, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(140,170,200,0.2)", cursor: "pointer", transition: "all 0.3s ease", height: "100%" }}
+                  onMouseEnter={function (e) { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "rgba(92,201,160,0.4)"; }}
+                  onMouseLeave={function (e) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = "rgba(140,170,200,0.2)"; }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                    <span style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.white }}>{b.name}</span>
+                    <span style={{ fontFamily: T.mono, fontSize: 10, color: T.ice, opacity: 0.7 }}>{b.freq}</span>
+                  </div>
+                  <div style={{ display: "inline-block", fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.auroraLight, background: "rgba(43,168,125,0.12)", border: "1px solid rgba(92,201,160,0.25)", borderRadius: 99, padding: "3px 12px", marginBottom: 10 }}>{b.optimal}</div>
+                  <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "rgba(214,232,243,0.75)", marginBottom: 10 }}>{b.why}</p>
+                  <span style={{ fontSize: 11.5, color: T.auroraLight, fontWeight: 600 }}>Deep dive →</span>
                 </div>
-                <div style={{ display: "inline-block", fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.auroraLight, background: "rgba(43,168,125,0.12)", border: "1px solid rgba(92,201,160,0.25)", borderRadius: 99, padding: "3px 12px", marginBottom: 10 }}>{b.optimal}</div>
-                <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "rgba(214,232,243,0.75)" }}>{b.why}</p>
-              </div>); })}
+              </Reveal>); })}
           </div>
           <p style={{ textAlign: "center", fontSize: 11.5, color: "rgba(214,232,243,0.5)", marginTop: 28 }}>Optimal ranges reflect longevity-medicine targets, which are stricter than standard lab reference ranges. Discuss results with your physician.</p>
         </div>
@@ -1119,7 +1297,8 @@ export default function App() {
           <SectionHead eyebrow="Clear thinking" title="Myths, debunked" sub="The longevity space is loud. Here's what the evidence actually supports." />
           <div className="cg" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             {MYTHS.map(function (m, i) { return (
-              <div key={i} style={gc("24px 26px")}>
+              <Reveal key={i} delay={(i % 2) * 0.12} style={{ height: "100%" }}>
+              <div className="liftcard" style={{ ...gc("24px 26px"), height: "100%" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10 }}>
                   <span style={{ color: T.warm, fontWeight: 700, fontSize: 15, flexShrink: 0 }}>✗</span>
                   <span style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, lineHeight: 1.4, textDecoration: "line-through", textDecorationColor: "rgba(217,88,67,0.45)", textDecorationThickness: 2 }}>{m.myth}</span>
@@ -1128,7 +1307,26 @@ export default function App() {
                   <span style={{ color: T.aurora, fontWeight: 700, fontSize: 14, flexShrink: 0 }}>✓</span>
                   <p style={{ fontSize: 13, lineHeight: 1.75, color: T.sub }}>{m.truth}</p>
                 </div>
-              </div>); })}
+              </div>
+              </Reveal>); })}
+          </div>
+        </div>
+      </section>
+
+      {/* HALLMARKS OF AGING */}
+      <section style={{ padding: "96px 0", background: T.white, borderTop: "1px solid " + T.glassBorder, borderBottom: "1px solid " + T.glassBorder }}>
+        <div className="mx">
+          <SectionHead eyebrow="The mechanism map" title="The 12 hallmarks of aging" sub="Why we age, according to the canonical framework of modern geroscience (López-Otín et al., Cell 2023) — and which pillars push back on each one." />
+          <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
+            {HALLMARKS.map(function (h, i) { return (
+              <Reveal key={i} delay={(i % 4) * 0.08} style={{ height: "100%" }}>
+                <div className="liftcard" style={{ padding: "20px 20px", borderRadius: 16, background: T.bg, border: "1px solid " + T.glassBorder, height: "100%", display: "flex", flexDirection: "column" }}>
+                  <div style={{ fontSize: 22, marginBottom: 10 }}>{h.icon}</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 13.5, fontWeight: 700, color: T.deep, marginBottom: 6, letterSpacing: -0.2 }}>{h.name}</div>
+                  <p style={{ fontSize: 11.5, lineHeight: 1.65, color: T.sub, flex: 1, marginBottom: 10 }}>{h.desc}</p>
+                  <div style={{ fontFamily: T.mono, fontSize: 9.5, color: T.aurora, letterSpacing: 0.5, paddingTop: 8, borderTop: "1px dashed " + T.glassBorder }}>↳ {h.pillars}</div>
+                </div>
+              </Reveal>); })}
           </div>
         </div>
       </section>
@@ -1138,10 +1336,18 @@ export default function App() {
         <div className="mx">
           <SectionHead eyebrow="Peer-reviewed research" title="The evidence wall" sub="The primary studies behind every number on this site." />
           <div style={{ display: "grid", gap: 2 }}>
-            {EVIDENCE.map(function (s, i) { return (<div key={i} className="er" style={{ padding: "16px 22px", display: "grid", gridTemplateColumns: "50px 1fr 200px", gap: 14, alignItems: "center", background: T.white, border: "1px solid " + T.glassBorder, borderRadius: i === 0 ? "12px 12px 0 0" : i === EVIDENCE.length - 1 ? "0 0 12px 12px" : "0" }}><div style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color: T.accent }}>{s.year}</div><div><div style={{ fontSize: 13, fontWeight: 600, color: T.deep, lineHeight: 1.4 }}>{s.title}</div><div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{s.a} &middot; {s.j}</div></div><div style={{ fontSize: 11.5, color: T.aurora, fontFamily: T.mono, fontWeight: 600, textAlign: "right" }}>{s.f}</div></div>); })}
+            {EVIDENCE.map(function (s, i) { return (<a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="er" style={{ textDecoration: "none", padding: "16px 22px", display: "grid", gridTemplateColumns: "50px 1fr 200px", gap: 14, alignItems: "center", background: T.white, border: "1px solid " + T.glassBorder, borderRadius: i === 0 ? "12px 12px 0 0" : i === EVIDENCE.length - 1 ? "0 0 12px 12px" : "0", transition: "background 0.2s ease" }}
+              onMouseEnter={function (e) { e.currentTarget.style.background = T.faint; }}
+              onMouseLeave={function (e) { e.currentTarget.style.background = T.white; }}>
+              <div style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color: T.accent }}>{s.year}</div>
+              <div><div style={{ fontSize: 13, fontWeight: 600, color: T.deep, lineHeight: 1.4 }}>{s.title}</div><div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{s.a} &middot; {s.j}</div></div>
+              <div style={{ textAlign: "right" }}><div style={{ fontSize: 11.5, color: T.aurora, fontFamily: T.mono, fontWeight: 600 }}>{s.f}</div><div style={{ fontSize: 10.5, color: T.accent, fontWeight: 600, marginTop: 3 }}>Read study ↗</div></div>
+            </a>); })}
           </div>
         </div>
       </section>
+
+      <GlossarySection />
 
       {/* FAQ */}
       <section id="faq" style={{ padding: "96px 0" }}>
