@@ -763,6 +763,127 @@ var EVIDENCE = [
 var LBL = { intensity: ["", "Light walk", "", "", "Moderate", "", "", "Vigorous", "", "", "Elite"], cold: ["None", "", "Occasional", "", "", "Regular", "", "", "", "", "Daily"], diet: ["Fast food", "", "", "", "Average", "", "", "", "Plant-rich", "", "Optimal"], sleep: ["Chaotic", "", "", "", "Irregular", "", "", "", "Consistent", "", "Perfect"], supps: ["None", "", "", "Basics", "", "", "", "Targeted", "", "", "Optimised"], social: ["Isolated", "", "", "", "Some", "", "", "", "Strong", "", "Thriving"], smoking: ["Never", "Former", "Current"], alcohol: ["None", "", "", "Light", "", "Moderate", "", "", "Heavy", "", "Excessive"] };
 function lb(a, v) { return a[v] || String(v); }
 
+/* ══════════════ NEW KNOWLEDGE CONTENT ══════════════ */
+var WHY_STATS = [
+  { n: "~10 yrs", l: "average gap between lifespan and healthspan — years lived in poor health" },
+  { n: "80%", l: "of premature heart disease and type 2 diabetes is preventable (WHO)" },
+  { n: "20–30%", l: "of longevity is genetic — the rest is built by daily habits" },
+];
+
+var SOLUTION_CARDS = [
+  { icon: "\u{1F52C}", title: "Learn the science", body: "Seven pillars, each backed by peer-reviewed meta-analyses covering 308,000+ participants. Click any pillar for a molecular-level deep dive — no hype, no anecdotes.", link: "#pillars", cta: "Explore the pillars →" },
+  { icon: "\u{1F9CD}", title: "See yourself in 3D", body: "Your personal avatar reacts to every habit in real time — body composition, posture, vitality — and estimates your biological vs. chronological age.", link: "#calculator", cta: "Meet your avatar →" },
+  { icon: "\u{1F4C5}", title: "Act on a protocol", body: "A 30-day starter protocol turns the research into one small step per day. Built for consistency, not perfection — the only variable that matters at 10-year horizons.", link: "#protocol", cta: "Start the protocol →" },
+];
+
+var PROTOCOL = [
+  { week: "Week 1", theme: "Foundation", color: "#3B8CC4", items: [
+    "Fix a consistent sleep window (same bedtime and wake time, ±30 min — regularity beats duration)",
+    "Walk 10 minutes daily after one meal (post-prandial glucose control starts here)",
+    "Cut liquid sugar: sodas, juices, sweetened coffee drinks",
+    "Book a blood panel: ApoB, HbA1c, hs-CRP, fasting insulin, vitamin D, Lp(a) — your baseline",
+  ]},
+  { week: "Week 2", theme: "Movement", color: "#2E8B6A", items: [
+    "3 × 30 min Zone 2 cardio (you can hold a conversation; build the aerobic base first)",
+    "2 × 20 min basic strength: squats, push-ups, rows — bodyweight is enough to start",
+    "Set a daily protein target of ~1.6 g per kg of body weight",
+    "Caffeine cutoff at 14:00 (half-life of 5–6 h protects deep sleep)",
+  ]},
+  { week: "Week 3", theme: "Plate & people", color: "#1B4965", items: [
+    "Add one cup of legumes daily — the most consistent food across all Blue Zones",
+    "Swap refined seed oils for olive oil; minimize ultra-processed foods",
+    "Schedule two real social touchpoints per week (calls count, in-person counts double)",
+    "Add 7–10 servings of vegetables across the day, anchored to existing meals",
+  ]},
+  { week: "Week 4", theme: "Consolidate", color: "#2BA87D", items: [
+    "Add one weekly HIIT session: 4–6 hard intervals of 30–90 seconds",
+    "Try heat or cold exposure: 2–3 sauna sessions or end showers with 30–60 s cold",
+    "Review your blood panel against the optimal ranges below — pick your top 2 gaps",
+    "Set 90-day targets and book a re-test. Consistency compounds from here.",
+  ]},
+];
+
+var BIOMARKERS = [
+  { name: "ApoB", optimal: "< 80 mg/dL", why: "Counts every atherogenic particle — a better predictor of cardiovascular risk than LDL-C alone.", freq: "Yearly" },
+  { name: "HbA1c", optimal: "< 5.4%", why: "Three-month average blood glucose. Tracks glycation — sugar damage to proteins that accelerates aging.", freq: "Yearly" },
+  { name: "hs-CRP", optimal: "< 1.0 mg/L", why: "High-sensitivity inflammation marker. Chronic low-grade inflammation drives most age-related disease.", freq: "Yearly" },
+  { name: "Fasting insulin", optimal: "< 6 mIU/L", why: "Rises years before glucose does — the earliest practical warning of insulin resistance.", freq: "Yearly" },
+  { name: "VO2 max", optimal: "Top 25% for age", why: "Strongest single predictor of all-cause mortality. Low-to-high fitness cuts mortality risk up to 4-fold.", freq: "1–2×/yr" },
+  { name: "Vitamin D", optimal: "40–60 ng/mL", why: "Hormone-like regulator of immune function and bone health. Most office workers run low.", freq: "Yearly" },
+  { name: "Blood pressure", optimal: "< 120/80", why: "Each 20/10 mmHg above 115/75 roughly doubles cardiovascular mortality risk. Measure at home, rested.", freq: "Monthly" },
+  { name: "Lp(a)", optimal: "< 50 mg/dL", why: "Genetically set cholesterol particle, elevated in ~20% of people. High values warrant aggressive ApoB control.", freq: "Once in life" },
+  { name: "Grip strength", optimal: "Above age median", why: "Simple proxy for total muscle mass and neuromuscular health — robustly predicts late-life independence.", freq: "Quarterly" },
+];
+
+var MYTHS = [
+  { myth: "Longevity is mostly genetic", truth: "Twin and adoption studies put genes at 20–30% of lifespan variance. Habits dominate until your 90s — genetics mostly decides who gets to play overtime." },
+  { myth: "A daily glass of red wine protects your heart", truth: "The famous J-curve largely dissolves once 'sick quitters' are removed from the data. Resveratrol doses in wine are biologically trivial. Less alcohol is simply better; zero is fine." },
+  { myth: "Running destroys your knees", truth: "Recreational runners show lower rates of knee osteoarthritis (~3.5%) than sedentary people (~10%). Cartilage adapts to load — it weakens without it." },
+  { myth: "You can't build muscle after 60", truth: "Resistance-training studies in 70- and even 90-year-olds show 30–170% strength gains within months. Sarcopenia is the default, not the destiny." },
+  { myth: "Supplements can replace a good diet", truth: "The VITAL trial and most mega-studies show isolated nutrients rarely replicate whole-food benefits. Supplements fix deficiencies; they don't fix eating patterns." },
+  { myth: "8 hours of sleep is all that matters", truth: "Sleep regularity predicts mortality better than duration (Windred 2024). A consistent 7 h beats a chaotic 8 h — timing is a longevity lever of its own." },
+];
+
+var FAQS = [
+  { q: "What single change has the biggest impact?", a: "If you are sedentary: exercise — going from nothing to 150 minutes a week is the steepest part of the benefit curve and improves nearly every other pillar (sleep, mood, insulin sensitivity). If you already train, diet quality carries the largest total potential at up to ~13 years." },
+  { q: "Are biological-age tests (epigenetic clocks) worth it?", a: "They are scientifically fascinating but not yet clinical-grade: the same sample sent twice can differ by several years. For now, functional markers — VO2 max, grip strength, ApoB, fasting insulin — tell you more, are cheaper, and are directly actionable. Our avatar's bio-age estimate is a habit-based approximation, not a diagnosis." },
+  { q: "Do I need supplements if I eat well?", a: "Test, don't guess. The defensible basics are vitamin D3 if your blood level is low, omega-3 (EPA/DHA) if you rarely eat fatty fish, and B12 if you are mostly plant-based. Magnesium helps many with sleep. Beyond that, evidence thins out fast — fix deficiencies, skip the hype stack." },
+  { q: "Is intermittent fasting required for longevity?", a: "No. Controlled trials show time-restricted eating performs about the same as ordinary calorie control when calories match. It is a useful adherence tool for some people, not a magic mechanism. Pick the eating pattern you can sustain for decades." },
+  { q: "How much alcohol is actually safe?", a: "The honest answer: the protective association of light drinking is heavily confounded, and recent Mendelian-randomization studies find no safe threshold for some outcomes. Practically — less is better, zero is fine, and keeping it light and social captures whatever benefit exists." },
+  { q: "What about longevity drugs like rapamycin or metformin?", a: "Rapamycin is the most robust life-extending compound in animal studies, and the TAME trial is testing metformin in humans — but neither has human longevity data yet, and both have real side-effect profiles. They are experiments, not protocols. Everything on this site outperforms them on current human evidence." },
+  { q: "If my family dies young, am I doomed? (Or: if they live long, am I safe?)", a: "Neither. Genetics explain 20–30% of lifespan variance. Bad family history makes the seven pillars more valuable, not less — you are compensating for a worse baseline. Good family history is a tailwind you can still squander." },
+  { q: "When is it too late to start?", a: "Never, and this is one of the best-replicated findings in the field. Quitting smoking at 60 still adds ~3 years. Starting exercise after 70 still cuts mortality. Muscle responds to training in your 90s. The best time was 20 years ago; the second-best time is genuinely today." },
+  { q: "Cardio or strength — which matters more?", a: "Both, for different reasons. VO2 max is the strongest mortality predictor; muscle mass and strength protect independence, bones, and metabolic health late in life. The evidence-based split: ~80% easy Zone 2 volume, 1–2 HIIT sessions, and 2–3 strength sessions per week." },
+  { q: "How accurate is the calculator?", a: "It applies effect sizes from published meta-analyses to population baselines — useful for comparing your habits and seeing relative leverage, not for predicting your personal date. Individual biology, environment, and luck all matter. Treat the output as a compass, not a clock." },
+];
+
+/* ══════════════ NEW UI PRIMITIVES ══════════════ */
+function Eyebrow({ children, light }) {
+  return <div style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: 3, textTransform: "uppercase", color: light ? T.auroraLight : T.accent, marginBottom: 10, fontWeight: 600 }}>{children}</div>;
+}
+
+function PillBtn({ children, onClick, primary, big, style }) {
+  var base = { border: "none", cursor: "pointer", fontFamily: T.sans, fontWeight: 600, borderRadius: 999, transition: "transform 0.15s ease, box-shadow 0.15s ease", padding: big ? "16px 36px" : "11px 26px", fontSize: big ? 15.5 : 13.5 };
+  var look = primary
+    ? { background: T.accent, color: T.white, boxShadow: "0 6px 20px rgba(59,140,196,0.30)" }
+    : { background: T.glass, color: T.deep, border: "1.5px solid " + T.glassBorder, backdropFilter: T.blurLight, WebkitBackdropFilter: T.blurLight };
+  return (
+    <button onClick={onClick} style={{ ...base, ...look, ...style }}
+      onMouseEnter={function (e) { e.currentTarget.style.transform = "translateY(-2px)"; if (primary) e.currentTarget.style.boxShadow = "0 10px 26px rgba(59,140,196,0.38)"; }}
+      onMouseLeave={function (e) { e.currentTarget.style.transform = "translateY(0)"; if (primary) e.currentTarget.style.boxShadow = "0 6px 20px rgba(59,140,196,0.30)"; }}>
+      {children}
+    </button>
+  );
+}
+
+function goTo(id) { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: "smooth" }); }
+
+function SectionHead({ eyebrow, title, sub, light }) {
+  var _r = useReveal(0.1), ref = _r[0], vis = _r[1];
+  return (
+    <div ref={ref} style={{ textAlign: "center", marginBottom: 48, opacity: vis ? 1 : 0, transform: vis ? "none" : "translateY(20px)", transition: "all 0.7s ease" }}>
+      <Eyebrow light={light}>{eyebrow}</Eyebrow>
+      <h2 style={{ fontFamily: T.sans, fontSize: "clamp(28px,4.4vw,44px)", fontWeight: 700, color: light ? T.white : T.deep, letterSpacing: -1.2, lineHeight: 1.12 }}>{title}</h2>
+      {sub && <p style={{ color: light ? "rgba(214,232,243,0.75)" : T.sub, marginTop: 12, fontSize: 15, maxWidth: 560, margin: "12px auto 0", lineHeight: 1.7 }}>{sub}</p>}
+    </div>
+  );
+}
+
+function Faq({ q, a, light }) {
+  var _s = useState(false), open = _s[0], setOpen = _s[1];
+  return (
+    <div style={{ border: "1px solid " + (light ? "rgba(140,170,200,0.25)" : T.glassBorder), borderRadius: 16, background: light ? "rgba(255,255,255,0.04)" : T.white, marginBottom: 10, overflow: "hidden", transition: "all 0.25s ease" }}>
+      <button onClick={function () { setOpen(!open); }} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, padding: "18px 22px", background: "none", border: "none", cursor: "pointer", textAlign: "left" }}>
+        <span style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 600, color: light ? T.white : T.deep, lineHeight: 1.4 }}>{q}</span>
+        <span style={{ flexShrink: 0, width: 28, height: 28, borderRadius: 99, border: "1.5px solid " + T.accent, color: T.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, transform: open ? "rotate(45deg)" : "none", transition: "transform 0.25s ease" }}>+</span>
+      </button>
+      <div style={{ maxHeight: open ? 400 : 0, overflow: "hidden", transition: "max-height 0.35s cubic-bezier(.4,0,.2,1)" }}>
+        <p style={{ padding: "0 22px 20px", fontSize: 13.5, lineHeight: 1.8, color: light ? "rgba(214,232,243,0.8)" : T.sub }}>{a}</p>
+      </div>
+    </div>
+  );
+}
+
 /* ═══════════════════════════ MAIN APP ═══════════════════════════ */
 export default function App() {
   var _s = useState(DEFAULT_INPUTS), inputs = _s[0], setInputs = _s[1];
@@ -775,58 +896,106 @@ export default function App() {
   var gained = r1(result.total - result.base);
   var gainedD = useAnim(gained);
   var scrollCalc = function () { calcRef.current && calcRef.current.scrollIntoView({ behavior: "smooth" }); };
-  var _r1 = useReveal(0.08), pRef = _r1[0], pVis = _r1[1];
-  var _r2 = useReveal(0.1), cRef = _r2[0], cVis = _r2[1];
-  var _r3 = useReveal(0.1), eRef = _r3[0], eVis = _r3[1];
   function Div() { return <div style={{ height: 1, background: "linear-gradient(90deg, transparent, " + T.glassBorder + ", transparent)", margin: "0 auto", maxWidth: 600 }} />; }
   var gc = function (s) { return { background: T.glass, backdropFilter: T.blur, WebkitBackdropFilter: T.blur, border: "1px solid " + T.glassBorder, borderRadius: T.radius, boxShadow: T.shadow, padding: s }; };
 
   return (
     <>
-      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n      "}</style>
+      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navlinks{display:none!important}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n      "}</style>
 
       {modal && <DetailModal pillarId={modal} onClose={function () { setModal(null); }} />}
 
-      {/* HERO */}
-      <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", background: "linear-gradient(175deg," + T.faint + " 0%," + T.bg + " 40%,rgba(43,168,125,0.03) 100%)" }}>
-        <FrostParticles />
-        <nav style={{ position: "absolute", top: 0, left: 0, right: 0, padding: "18px 32px", display: "flex", justifyContent: "space-between", alignItems: "center", zIndex: 10 }}>
-          <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.deep }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
-          <button onClick={scrollCalc} style={{ ...gc("8px 22px"), cursor: "pointer", fontFamily: T.sans, fontWeight: 600, fontSize: 13, color: T.deep }}>Calculate Now</button>
-        </nav>
-        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 760, padding: "0 28px" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "7px 18px", borderRadius: 99, background: T.glass, border: "1px solid " + T.glassBorder, marginBottom: 28, backdropFilter: T.blurLight }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.aurora, display: "inline-block" }} />
-            <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.sub, letterSpacing: 1.2, textTransform: "uppercase" }}>Based on 6 peer-reviewed meta-analyses</span>
+      {/* NAV — fixed glass bar */}
+      <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(245,248,250,0.82)", backdropFilter: T.blur, WebkitBackdropFilter: T.blur, borderBottom: "1px solid " + T.glassBorder }}>
+        <div className="mx" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 28px" }}>
+          <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15.5, color: T.deep, cursor: "pointer" }} onClick={function () { window.scrollTo({ top: 0, behavior: "smooth" }); }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
+          <div className="navlinks" style={{ display: "flex", gap: 26, alignItems: "center" }}>
+            {[["Science", "pillars"], ["Protocol", "protocol"], ["Biomarkers", "biomarkers"], ["FAQ", "faq"]].map(function (l) { return <span key={l[1]} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13.5, fontWeight: 600, color: T.mid, cursor: "pointer" }}>{l[0]}</span>; })}
           </div>
-          <h1 style={{ fontFamily: T.sans, fontSize: "clamp(34px,5.5vw,58px)", fontWeight: 700, color: T.deep, lineHeight: 1.08, marginBottom: 20, letterSpacing: -1.5 }}>Your Habits Decide<br />How Long You Live</h1>
-          <p style={{ fontSize: "clamp(15px,1.8vw,18px)", color: T.sub, lineHeight: 1.78, maxWidth: 540, margin: "0 auto 36px" }}>Genetics account for only 20&ndash;30% of longevity. The rest is shaped by what you eat, how you move, and when you sleep. Click any pillar below to learn exactly why.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={scrollCalc} style={{ background: T.accent, color: T.white, border: "none", padding: "14px 34px", borderRadius: 12, fontFamily: T.sans, fontSize: 15, fontWeight: 600, cursor: "pointer", boxShadow: "0 4px 16px rgba(59,140,196,0.25)", animation: "gp 3s ease-in-out infinite" }}>Calculate My Lifespan</button>
-            <button onClick={function () { document.getElementById("pillars").scrollIntoView({ behavior: "smooth" }); }} style={{ ...gc("14px 28px"), color: T.mid, cursor: "pointer", fontFamily: T.sans, fontSize: 15, fontWeight: 600 }}>Explore the Science</button>
-          </div>
+          <PillBtn primary onClick={scrollCalc}>Calculate now</PillBtn>
         </div>
-        <div className="hs" style={{ position: "relative", zIndex: 1, display: "flex", gap: 48, justifyContent: "center", marginTop: 48, ...gc("24px 36px") }}>
-          {[{ n: "+36.5", l: "max years gainable" }, { n: "308K+", l: "study participants" }, { n: "7", l: "evidence-backed pillars" }].map(function (s, i) { return (<div key={i} style={{ textAlign: "center" }}><div style={{ fontFamily: T.mono, fontSize: "clamp(22px,3vw,30px)", fontWeight: 700, color: T.aurora }}>{s.n}</div><div style={{ fontSize: 11, color: T.dim, marginTop: 3 }}>{s.l}</div></div>); })}
+      </nav>
+
+      {/* HERO */}
+      <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", paddingTop: 80, background: "linear-gradient(175deg," + T.faint + " 0%," + T.bg + " 40%,rgba(43,168,125,0.03) 100%)" }}>
+        <FrostParticles />
+        <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 820, padding: "0 28px" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 99, background: T.glass, border: "1px solid " + T.glassBorder, marginBottom: 30, backdropFilter: T.blurLight }}>
+            <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.aurora, display: "inline-block" }} />
+            <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.sub, letterSpacing: 1.2, textTransform: "uppercase" }}>Evidence-based healthspan, no hype</span>
+          </div>
+          <h1 style={{ fontFamily: T.sans, fontSize: "clamp(38px,6.5vw,68px)", fontWeight: 700, color: T.deep, lineHeight: 1.05, marginBottom: 22, letterSpacing: -2 }}>Your wealth is<br />measured in years</h1>
+          <p style={{ fontSize: "clamp(15px,1.8vw,18.5px)", color: T.sub, lineHeight: 1.78, maxWidth: 580, margin: "0 auto 38px" }}>From your first habit to a lifelong protocol, Longevity Lab gives you simple, research-backed tools to build, manage, and preserve your healthspan over time.</p>
+          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 52 }}>
+            <PillBtn primary big onClick={scrollCalc} style={{ animation: "gp 3s ease-in-out infinite" }}>Calculate my lifespan</PillBtn>
+            <PillBtn big onClick={function () { goTo("pillars"); }}>Explore the science</PillBtn>
+          </div>
+          <div className="hs" style={{ display: "flex", gap: 0, justifyContent: "center", flexWrap: "wrap", ...gc("10px 8px") }}>
+            {[
+              { t: "Peer-reviewed", s: "6 meta-analyses. 308K+ participants." },
+              { t: "+36.5 years", s: "Maximum gainable across 7 pillars." },
+              { t: "Personalized", s: "A 3D avatar that mirrors your habits." },
+              { t: "Actionable", s: "30-day protocol. Zero guesswork." },
+            ].map(function (b, i) { return (
+              <div key={i} style={{ padding: "10px 26px", textAlign: "center", borderLeft: i > 0 ? "1px solid " + T.glassBorder : "none" }}>
+                <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14.5, color: T.deep }}>{b.t}</div>
+                <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{b.s}</div>
+              </div>); })}
+          </div>
         </div>
         <div style={{ position: "absolute", top: "-12%", right: "-6%", width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle,rgba(59,140,196,0.06),transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "absolute", bottom: "-10%", left: "-8%", width: 580, height: 580, borderRadius: "50%", background: "radial-gradient(circle,rgba(43,168,125,0.04),transparent 70%)", pointerEvents: "none" }} />
       </section>
 
-      <div style={{ padding: "18px 0", borderBottom: "1px solid " + T.glassBorder, background: T.white }}>
-        <div className="mx" style={{ display: "flex", justifyContent: "center", gap: 36, flexWrap: "wrap" }}>
-          {["JAMA Internal Medicine", "PLOS Medicine", "New England Journal of Medicine", "SLEEP Journal"].map(function (j) { return <span key={j} style={{ fontFamily: T.mono, fontSize: 10, color: T.dim, letterSpacing: 1.5, textTransform: "uppercase" }}>{j}</span>; })}
+      {/* PUBLISHED-IN STRIP */}
+      <div style={{ padding: "20px 0", borderBottom: "1px solid " + T.glassBorder, background: T.white }}>
+        <div className="mx" style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 36, flexWrap: "wrap" }}>
+          <span style={{ fontFamily: T.mono, fontSize: 9.5, color: T.dim, letterSpacing: 2, textTransform: "uppercase" }}>Research from</span>
+          {["JAMA Internal Medicine", "PLOS Medicine", "New England Journal of Medicine", "SLEEP Journal"].map(function (j) { return <span key={j} style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 700, color: "#B9C9D6", letterSpacing: 0.3 }}>{j}</span>; })}
         </div>
       </div>
 
-      {/* PILLARS (clickable) */}
-      <section id="pillars" style={{ padding: "96px 0 80px" }}>
-        <div className="mx">
-          <div ref={pRef} style={{ textAlign: "center", marginBottom: 52, opacity: pVis ? 1 : 0, transform: pVis ? "none" : "translateY(20px)", transition: "all 0.7s ease" }}>
-            <div style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: 2.5, textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>The Science</div>
-            <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4vw,38px)", fontWeight: 700, color: T.deep, letterSpacing: -0.8 }}>7 Pillars That Move the Needle</h2>
-            <p style={{ color: T.sub, marginTop: 10, fontSize: 14, maxWidth: 480, margin: "10px auto 0" }}>Click any card to deep-dive into the biology, research, and practical tips.</p>
+      {/* WHY LONGEVITY — narrative band */}
+      <section style={{ padding: "96px 0", background: T.bgAlt }}>
+        <div className="mx" style={{ maxWidth: 980 }}>
+          <div className="cg" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 48, alignItems: "center" }}>
+            <div>
+              <Eyebrow>Why healthspan?</Eyebrow>
+              <h2 style={{ fontFamily: T.sans, fontSize: "clamp(28px,4vw,40px)", fontWeight: 700, color: T.deep, letterSpacing: -1, lineHeight: 1.15, marginBottom: 18 }}>Because lifespan without health is the wrong goal</h2>
+              <p style={{ fontSize: 15, color: T.sub, lineHeight: 1.85, marginBottom: 14 }}>The average person spends their final decade managing disease — a quiet erosion of the years they worked hardest to reach. That gap between how long we live and how long we live <em>well</em> is the real problem.</p>
+              <p style={{ fontSize: 15, color: T.sub, lineHeight: 1.85 }}>Healthspan was built differently. It compounds like capital: every workout, every consistent night of sleep, every shared meal is a deposit. The science below shows exactly where the interest rates are highest — chosen by people who want decades that work on their own terms.</p>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+              {WHY_STATS.map(function (s, i) { return (
+                <div key={i} style={{ ...gc("20px 24px"), display: "flex", alignItems: "center", gap: 18 }}>
+                  <div style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: T.aurora, whiteSpace: "nowrap" }}>{s.n}</div>
+                  <div style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.55 }}>{s.l}</div>
+                </div>); })}
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* SOLUTION CARDS */}
+      <section style={{ padding: "96px 0 80px" }}>
+        <div className="mx">
+          <SectionHead eyebrow="The approach" title="Science is the answer. This is how you get there" sub="A focused platform for people who want to build long-term health — not chase trends, not biohack blindly, not guess." />
+          <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
+            {SOLUTION_CARDS.map(function (c, i) { return (
+              <div key={i} style={{ ...gc("30px 28px"), display: "flex", flexDirection: "column" }}>
+                <div style={{ width: 52, height: 52, borderRadius: 16, background: T.faint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18 }}>{c.icon}</div>
+                <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.4, marginBottom: 10 }}>{c.title}</h3>
+                <p style={{ fontSize: 13.5, lineHeight: 1.75, color: T.sub, flex: 1, marginBottom: 16 }}>{c.body}</p>
+                <span onClick={function () { goTo(c.link.slice(1)); }} style={{ fontSize: 13, color: T.accent, fontWeight: 600, cursor: "pointer" }}>{c.cta}</span>
+              </div>); })}
+          </div>
+        </div>
+      </section>
+
+      {/* PILLARS (clickable) */}
+      <section id="pillars" style={{ padding: "80px 0", background: T.bgAlt }}>
+        <div className="mx">
+          <SectionHead eyebrow="The science" title="Every pillar, covered" sub="Seven habits with the strongest mortality evidence in the literature. Click any card to deep-dive into the biology, research, and practical protocols." />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
             {PILLARS.map(function (p, i) { return <PillarCard key={p.id} p={p} index={i} onOpen={setModal} />; })}
           </div>
@@ -836,12 +1005,9 @@ export default function App() {
       <Div />
 
       {/* CALCULATOR */}
-      <section ref={calcRef} style={{ padding: "88px 0 100px" }}>
+      <section id="calculator" ref={calcRef} style={{ padding: "88px 0 100px" }}>
         <div className="mx">
-          <div ref={cRef} style={{ textAlign: "center", marginBottom: 48, opacity: cVis ? 1 : 0, transform: cVis ? "none" : "translateY(20px)", transition: "all 0.7s ease" }}>
-            <div style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: 2.5, textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>Interactive Calculator</div>
-            <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4vw,38px)", fontWeight: 700, color: T.deep, letterSpacing: -0.8 }}>How Long Will <em style={{ fontStyle: "italic", color: T.accent }}>You</em> Live?</h2>
-          </div>
+          <SectionHead eyebrow="Interactive calculator" title={<span>How long will <em style={{ fontStyle: "italic", color: T.accent }}>you</em> live?</span>} sub="Move the sliders. Your avatar, your biological age, and your estimate update in real time." />
 
           <div className="cg" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "start" }}>
             {/* INPUTS */}
@@ -905,34 +1071,135 @@ export default function App() {
         </div>
       </section>
 
-      <Div />
+      {/* 30-DAY PROTOCOL */}
+      <section id="protocol" style={{ padding: "96px 0", background: T.bgAlt }}>
+        <div className="mx" style={{ maxWidth: 880 }}>
+          <SectionHead eyebrow="Getting started" title="Set up in 30 days, built for 30 years" sub="One theme per week, a few small actions per day. Compliance beats perfection — this is the on-ramp, not the destination." />
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            {PROTOCOL.map(function (w, i) { return (
+              <div key={i} style={{ ...gc("26px 30px"), display: "grid", gridTemplateColumns: "120px 1fr", gap: 24 }} className="er">
+                <div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase" }}>{w.week}</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 19, fontWeight: 700, color: w.color, letterSpacing: -0.4, marginTop: 2 }}>{w.theme}</div>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                  {w.items.map(function (it, j) { return (
+                    <div key={j} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                      <span style={{ width: 18, height: 18, borderRadius: 99, background: w.color + "22", color: w.color, fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontFamily: T.mono }}>{j + 1}</span>
+                      <span style={{ fontSize: 13.5, color: T.sub, lineHeight: 1.65 }}>{it}</span>
+                    </div>); })}
+                </div>
+              </div>); })}
+          </div>
+        </div>
+      </section>
+
+      {/* BIOMARKERS — deep band */}
+      <section id="biomarkers" style={{ padding: "96px 0", background: "linear-gradient(180deg," + T.deep + " 0%,#11385A 100%)" }}>
+        <div className="mx">
+          <SectionHead light eyebrow="Measure what matters" title="Nine numbers worth knowing" sub="Feelings lie; bloodwork doesn't. These markers catch problems a decade before symptoms — most are available in one standard panel." />
+          <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+            {BIOMARKERS.map(function (b, i) { return (
+              <div key={i} style={{ padding: "22px 24px", borderRadius: T.radius, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(140,170,200,0.2)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <span style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.white }}>{b.name}</span>
+                  <span style={{ fontFamily: T.mono, fontSize: 10, color: T.ice, opacity: 0.7 }}>{b.freq}</span>
+                </div>
+                <div style={{ display: "inline-block", fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.auroraLight, background: "rgba(43,168,125,0.12)", border: "1px solid rgba(92,201,160,0.25)", borderRadius: 99, padding: "3px 12px", marginBottom: 10 }}>{b.optimal}</div>
+                <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "rgba(214,232,243,0.75)" }}>{b.why}</p>
+              </div>); })}
+          </div>
+          <p style={{ textAlign: "center", fontSize: 11.5, color: "rgba(214,232,243,0.5)", marginTop: 28 }}>Optimal ranges reflect longevity-medicine targets, which are stricter than standard lab reference ranges. Discuss results with your physician.</p>
+        </div>
+      </section>
+
+      {/* MYTHS */}
+      <section style={{ padding: "96px 0 80px" }}>
+        <div className="mx" style={{ maxWidth: 920 }}>
+          <SectionHead eyebrow="Clear thinking" title="Myths, debunked" sub="The longevity space is loud. Here's what the evidence actually supports." />
+          <div className="cg" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            {MYTHS.map(function (m, i) { return (
+              <div key={i} style={gc("24px 26px")}>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10 }}>
+                  <span style={{ color: T.warm, fontWeight: 700, fontSize: 15, flexShrink: 0 }}>✗</span>
+                  <span style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, lineHeight: 1.4, textDecoration: "line-through", textDecorationColor: "rgba(217,88,67,0.45)", textDecorationThickness: 2 }}>{m.myth}</span>
+                </div>
+                <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
+                  <span style={{ color: T.aurora, fontWeight: 700, fontSize: 14, flexShrink: 0 }}>✓</span>
+                  <p style={{ fontSize: 13, lineHeight: 1.75, color: T.sub }}>{m.truth}</p>
+                </div>
+              </div>); })}
+          </div>
+        </div>
+      </section>
 
       {/* EVIDENCE */}
       <section style={{ padding: "76px 0", background: T.bgAlt }}>
         <div className="mx">
-          <div ref={eRef} style={{ textAlign: "center", marginBottom: 40, opacity: eVis ? 1 : 0, transform: eVis ? "none" : "translateY(20px)", transition: "all 0.7s ease" }}>
-            <div style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: 2.5, textTransform: "uppercase", color: T.accent, marginBottom: 8 }}>Peer-Reviewed Research</div>
-            <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4vw,36px)", fontWeight: 700, color: T.deep }}>The Evidence Wall</h2>
-          </div>
+          <SectionHead eyebrow="Peer-reviewed research" title="The evidence wall" sub="The primary studies behind every number on this site." />
           <div style={{ display: "grid", gap: 2 }}>
             {EVIDENCE.map(function (s, i) { return (<div key={i} className="er" style={{ padding: "16px 22px", display: "grid", gridTemplateColumns: "50px 1fr 200px", gap: 14, alignItems: "center", background: T.white, border: "1px solid " + T.glassBorder, borderRadius: i === 0 ? "12px 12px 0 0" : i === EVIDENCE.length - 1 ? "0 0 12px 12px" : "0" }}><div style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color: T.accent }}>{s.year}</div><div><div style={{ fontSize: 13, fontWeight: 600, color: T.deep, lineHeight: 1.4 }}>{s.title}</div><div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{s.a} &middot; {s.j}</div></div><div style={{ fontSize: 11.5, color: T.aurora, fontFamily: T.mono, fontWeight: 600, textAlign: "right" }}>{s.f}</div></div>); })}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ padding: "76px 0" }}>
-        <div className="mx" style={{ maxWidth: 560, textAlign: "center" }}>
-          <h2 style={{ fontFamily: T.sans, fontSize: "clamp(22px,3.5vw,28px)", fontWeight: 700, color: T.deep, marginBottom: 10 }}>Stay on the Cutting Edge</h2>
-          <p style={{ color: T.sub, fontSize: 14, lineHeight: 1.7, marginBottom: 24 }}>New longevity research every month, distilled into actionable insights.</p>
-          {!emailSent ? (<form onSubmit={function (e) { e.preventDefault(); setEmailSent(true); }} style={{ display: "flex", gap: 10, maxWidth: 400, margin: "0 auto" }}><input type="email" required placeholder="you@email.com" style={{ flex: 1, padding: "12px 16px", borderRadius: 12, border: "1.5px solid " + T.glassBorder, fontFamily: T.sans, fontSize: 14, outline: "none", background: T.white, color: T.deep }} /><button type="submit" style={{ background: T.accent, color: T.white, border: "none", padding: "12px 22px", borderRadius: 12, fontFamily: T.sans, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>Subscribe</button></form>) : (<div style={{ padding: "14px 24px", borderRadius: 12, background: "rgba(43,168,125,0.06)", border: "1px solid rgba(43,168,125,0.18)", fontFamily: T.mono, fontSize: 13, color: T.aurora }}>{"\u2713"} You are in.</div>)}
+      {/* FAQ */}
+      <section id="faq" style={{ padding: "96px 0" }}>
+        <div className="mx" style={{ maxWidth: 760 }}>
+          <SectionHead eyebrow="FAQ" title="Frequently asked questions" />
+          {FAQS.map(function (f, i) { return <Faq key={i} q={f.q} a={f.a} />; })}
         </div>
       </section>
 
-      <footer style={{ padding: "32px 0", borderTop: "1px solid " + T.glassBorder }}>
-        <div className="mx" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
-          <div><div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.deep }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div><div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>Educational &middot; Not medical advice</div></div>
-          <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>Peer-reviewed science &middot; {new Date().getFullYear()}</div>
+      {/* CTA BAND */}
+      <section style={{ padding: "0 0 96px" }}>
+        <div className="mx">
+          <div style={{ borderRadius: 28, padding: "clamp(40px,6vw,72px) clamp(24px,5vw,64px)", textAlign: "center", background: "linear-gradient(135deg," + T.deep + " 0%,#16466B 60%,#1E5E5A 100%)", position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: "-40%", right: "-10%", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle,rgba(92,201,160,0.18),transparent 70%)", pointerEvents: "none" }} />
+            <div style={{ position: "relative" }}>
+              <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4.5vw,44px)", fontWeight: 700, color: T.white, letterSpacing: -1.2, lineHeight: 1.12, marginBottom: 14 }}>Start, build, and preserve<br />your healthspan</h2>
+              <p style={{ color: "rgba(214,232,243,0.75)", fontSize: 15, lineHeight: 1.7, marginBottom: 30, maxWidth: 480, margin: "0 auto 30px" }}>New longevity research every month, distilled into actionable insights. No hype, no price calls \u2014 frameworks and clear thinking.</p>
+              {!emailSent ? (
+                <form onSubmit={function (e) { e.preventDefault(); setEmailSent(true); }} style={{ display: "flex", gap: 10, maxWidth: 440, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
+                  <input type="email" required placeholder="you@email.com" style={{ flex: "1 1 220px", padding: "14px 22px", borderRadius: 999, border: "1.5px solid rgba(197,223,240,0.3)", fontFamily: T.sans, fontSize: 14, outline: "none", background: "rgba(255,255,255,0.08)", color: T.white }} />
+                  <button type="submit" style={{ background: T.aurora, color: T.white, border: "none", padding: "14px 30px", borderRadius: 999, fontFamily: T.sans, fontWeight: 600, fontSize: 14.5, cursor: "pointer", boxShadow: "0 6px 20px rgba(43,168,125,0.35)" }}>Subscribe</button>
+                </form>
+              ) : (
+                <div style={{ display: "inline-block", padding: "14px 28px", borderRadius: 999, background: "rgba(43,168,125,0.15)", border: "1px solid rgba(92,201,160,0.35)", fontFamily: T.mono, fontSize: 13, color: T.auroraLight }}>{"\u2713"} You are in. Welcome to the long game.</div>
+              )}
+              <div style={{ marginTop: 26 }}>
+                <PillBtn primary big onClick={scrollCalc} style={{ background: T.white, color: T.deep, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>Calculate my lifespan</PillBtn>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ borderTop: "1px solid " + T.glassBorder, background: T.white }}>
+        <div className="mx" style={{ padding: "56px 28px 0" }}>
+          <div className="pg" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32 }}>
+            <div>
+              <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 16, color: T.deep, marginBottom: 10 }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
+              <p style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.7, maxWidth: 280 }}>Research-backed tools to build, manage, and preserve your healthspan. Educational content only \u2014 not medical advice.</p>
+            </div>
+            <div>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>Explore</div>
+              {[["The 7 pillars", "pillars"], ["Calculator", "calculator"], ["30-day protocol", "protocol"], ["Biomarkers", "biomarkers"]].map(function (l) { return <div key={l[1]} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
+            </div>
+            <div>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>Knowledge</div>
+              {[["Myths debunked", "faq"], ["Evidence wall", "faq"], ["FAQ", "faq"]].map(function (l, i) { return <div key={i} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
+            </div>
+            <div>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>Sources</div>
+              {["JAMA Internal Med", "PLOS Medicine", "NEJM", "SLEEP Journal"].map(function (j) { return <div key={j} style={{ fontSize: 13, color: T.sub, marginBottom: 9, fontWeight: 500 }}>{j}</div>; })}
+            </div>
+          </div>
+          <div style={{ borderTop: "1px solid " + T.glassBorder, marginTop: 44, padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
+            <span style={{ fontSize: 11, color: T.dim }}>The information on this site is for educational purposes and is not a substitute for professional medical advice, diagnosis, or treatment.</span>
+            <span style={{ fontSize: 10.5, color: T.dim, fontFamily: T.mono }}>Peer-reviewed science &middot; {new Date().getFullYear()}</span>
+          </div>
         </div>
       </footer>
     </>
