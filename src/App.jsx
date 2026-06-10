@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import Avatar3D from "./Avatar3D.jsx";
 
 /* ═══════════════════════════════════════════════════════════════
    LONGEVITY LAB v5 — Lifelike Avatar + A4 Deep-Dives
@@ -873,8 +874,8 @@ export default function App() {
               {/* character */}
               <div style={{ ...gc("20px 20px 12px"), textAlign: "center", marginBottom: 14 }}>
                 <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 8 }}>YOUR AVATAR</div>
-                <HabitCharacter inputs={inputs} />
-                <div style={{ fontSize: 11, color: T.dim, marginTop: 4, fontStyle: "italic" }}>Reacts to every slider</div>
+                <Avatar3D inputs={inputs} gained={gained} />
+                <div style={{ fontSize: 11, color: T.dim, marginTop: 8, fontStyle: "italic" }}>Reacts to every slider &middot; drag to rotate</div>
               </div>
 
               {/* gauge */}
