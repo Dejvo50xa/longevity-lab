@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import Avatar3D from "./Avatar3D.jsx";
+import { Analytics } from '@vercel/analytics/react';
 
 /* ═══════════════════════════════════════════════════════════════
    LONGEVITY LAB v5 — Lifelike Avatar + A4 Deep-Dives
@@ -935,6 +936,7 @@ export default function App() {
           <div style={{ fontSize: 10, color: T.dim, fontFamily: T.mono }}>Peer-reviewed science &middot; {new Date().getFullYear()}</div>
         </div>
       </footer>
+      <Analytics />
     </>
   );
 }
