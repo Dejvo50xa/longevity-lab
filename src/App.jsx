@@ -1,4 +1,8 @@
-import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import { UI, CS, BIOUI } from "./content-cs.js";
+
+var LangCtx = createContext("cs");
+function useUI() { var l = useContext(LangCtx); return { lang: l, U: UI[l], cs: l === "cs" }; }
 import Avatar2D from "./Avatar2D.jsx";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -255,7 +259,7 @@ var DEFAULT_INPUTS = { age: 30, sex: "male", exerciseDays: 3, exerciseIntensity:
 
 function r1(n) { return Math.round(n * 10) / 10; }
 
-function calcLifespan(inp) {
+function calcLifespan(inp, bio) {
   var base = BASE_LIFE[inp.sex];
   var raw = [
     { key: "exercise", label: "Exercise", years: (inp.exerciseDays / 7) * (inp.exerciseIntensity / 10) * 4.5, color: T.accent },
@@ -268,9 +272,38 @@ function calcLifespan(inp) {
     { key: "smoking", label: "Smoking", years: inp.smokingStatus === 0 ? 0 : inp.smokingStatus === 1 ? -5 : -10, color: T.warm },
     { key: "alcohol", label: "Alcohol", years: (inp.alcoholScore >= 4 && inp.alcoholScore <= 6) ? 1 : inp.alcoholScore > 7 ? -3 : 0, color: T.warmLight },
   ];
-  var factors = raw.map(function (f) { return { key: f.key, label: f.label, years: r1(f.years), color: f.color }; });
-  var total = base + factors.reduce(function (s, f) { return s + f.years; }, 0);
-  return { base: base, total: r1(total), factors: factors };
+  // ── metodika ──
+  // 1) zisky klesaji s vekem (Fadnes 2022: +10,7 roku ve 20 letech, vyrazne min v 60)
+  var ageF = Math.min(Math.max(1 - (inp.age - 20) * 0.0135, 0.22), 1);
+  // 2) pilire se prekryvaji (spolecne mechanismy) -> klesajici vynosy, ne proste secteni
+  var posRaw = 0, negRaw = 0;
+  raw.forEach(function (f) { if (f.years >= 0) posRaw += f.years; else negRaw += f.years; });
+  var CAP = 24;
+  var posAdj = CAP * (1 - Math.exp(-(posRaw * ageF) / CAP));
+  var kPos = posRaw > 0 ? posAdj / posRaw : 0;
+  var kNeg = 0.65 + 0.35 * ageF;
+  var negAdj = negRaw * kNeg;
+  var factors = raw.map(function (f) {
+    return { key: f.key, label: f.label, years: r1(f.years >= 0 ? f.years * kPos : f.years * kNeg), color: f.color };
+  });
+  // 3) volitelne biomarkery (vaha 0,6 kvuli castecnemu prekryvu se zivotospravou)
+  var bioAdj = 0, bioUsed = false;
+  if (bio) {
+    var num = function (v) { var x = Number(v); return (v === "" || v === null || v === undefined || isNaN(x)) ? null : x; };
+    var cl = function (x, lo, hi) { return Math.min(Math.max(x, lo), hi); };
+    var a = num(bio.apob), hb = num(bio.hba1c), cr = num(bio.crp), bp = num(bio.bp), vo = num(bio.vo2);
+    if (a !== null) { bioAdj += cl((80 - a) / 20 * 0.6, -3, 1.5); bioUsed = true; }
+    if (hb !== null) { bioAdj += cl((5.4 - hb) / 0.5 * 0.8, -4, 1.2); bioUsed = true; }
+    if (cr !== null) { bioAdj += cl((1.0 - cr) * 0.6, -3, 0.8); bioUsed = true; }
+    if (bp !== null) { bioAdj += cl((120 - bp) / 10 * 0.7, -4, 1.2); bioUsed = true; }
+    if (vo !== null) { bioAdj += cl((vo - 32) / 3.5 * 0.8, -4, 5); bioUsed = true; }
+    bioAdj *= 0.6 * ageF;
+  }
+  var total = base + posAdj + negAdj + bioAdj;
+  // 4) pasmo nejistoty misto jednoho cisla
+  var band = 2.2 + Math.abs(posAdj) * 0.12 + (bioUsed ? 0 : 0.8);
+  return { base: base, total: r1(total), low: r1(total - band), high: r1(total + band),
+           factors: factors, bioAdj: r1(bioAdj), bioUsed: bioUsed, ageF: ageF };
 }
 
 /* ══════════════ HOOKS ══════════════ */
@@ -646,6 +679,7 @@ function HabitCharacter({ inputs }) {
 
 /* ══════════════ GAUGE ══════════════ */
 function Gauge({ value, max }) {
+  var u = useUI();
   if (max === undefined) max = 120;
   var dv = useAnim(value); var pct = Math.min(value / max, 1);
   var r = 86, cx = 100, cy = 100, circ = 2 * Math.PI * r;
@@ -655,17 +689,18 @@ function Gauge({ value, max }) {
       <circle cx={cx} cy={cy} r={r} fill="none" stroke={T.glassBorder} strokeWidth={8} />
       <circle cx={cx} cy={cy} r={r} fill="none" stroke="url(#gG)" strokeWidth={8} strokeDasharray={circ} strokeDashoffset={circ * (1 - pct)} strokeLinecap="round" transform={"rotate(-90 " + cx + " " + cy + ")"} style={{ transition: "stroke-dashoffset 0.7s cubic-bezier(.4,0,.2,1)" }} />
       <text x={cx} y={cy - 4} textAnchor="middle" fill={T.deep} fontFamily={T.mono} fontWeight="700" fontSize="34">{dv}</text>
-      <text x={cx} y={cy + 16} textAnchor="middle" fill={T.sub} fontFamily={T.sans} fontSize="11" fontWeight="500">estimated years</text>
+      <text x={cx} y={cy + 16} textAnchor="middle" fill={T.sub} fontFamily={T.sans} fontSize="11" fontWeight="500">{u.U.calc.gaugeUnit}</text>
     </svg>
   );
 }
 
 /* ══════════════ BARS ══════════════ */
 function Bars({ factors }) {
+  var u = useUI();
   var mx = Math.max.apply(null, factors.map(function (f) { return Math.abs(f.years); }).concat([0.1]));
   return (<div style={{ display: "flex", flexDirection: "column", gap: 5 }}>{factors.map(function (f) { return (
     <div key={f.key} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <span style={{ width: 76, textAlign: "right", fontSize: 11, color: T.sub, fontFamily: T.sans, fontWeight: 500 }}>{f.label}</span>
+      <span style={{ width: 76, textAlign: "right", fontSize: 11, color: T.sub, fontFamily: T.sans, fontWeight: 500 }}>{u.cs && CS.factors[f.key] ? CS.factors[f.key] : f.label}</span>
       <div style={{ flex: 1, height: 13, background: T.faint, borderRadius: 7, overflow: "hidden", position: "relative" }}>
         <div style={{ position: "absolute", left: f.years >= 0 ? "50%" : undefined, right: f.years < 0 ? "50%" : undefined, width: (Math.abs(f.years) / mx) * 50 + "%", height: "100%", background: f.years >= 0 ? f.color : T.warm, borderRadius: 7, transition: "width 0.5s cubic-bezier(.4,0,.2,1)" }} />
       </div>
@@ -688,6 +723,8 @@ function Sl({ min, max, step, value, onChange, label, dv }) {
 
 /* ══════════════ PILLAR CARD ══════════════ */
 function PillarCard({ p, index, onOpen }) {
+  var u = useUI();
+  var o = (u.cs && CS.pillars[p.id]) || {};
   var _r = useReveal(0.1), ref = _r[0], vis = _r[1];
   return (
     <div ref={ref} onClick={function () { onOpen(p.id); }} style={{ padding: "24px 22px", background: T.glass, backdropFilter: T.blur, WebkitBackdropFilter: T.blur, border: "1px solid " + T.glassBorder, borderRadius: T.radius, boxShadow: T.shadow, cursor: "pointer", transition: "all 0.4s cubic-bezier(.4,0,.2,1) " + (index * 0.05) + "s, transform 0.2s ease", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(24px)", position: "relative", overflow: "hidden" }}
@@ -695,18 +732,18 @@ function PillarCard({ p, index, onOpen }) {
       onMouseLeave={function (e) { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = T.shadow; e.currentTarget.style.borderColor = T.glassBorder; }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <span style={{ fontSize: 24 }}>{p.icon}</span>
-        <div style={{ fontFamily: T.mono, fontSize: 17, fontWeight: 700, color: T.aurora }}>+{p.minY}&ndash;{p.maxY}<span style={{ fontSize: 10, fontWeight: 500, color: T.sub, marginLeft: 2 }}>yrs</span></div>
+        <div style={{ fontFamily: T.mono, fontSize: 17, fontWeight: 700, color: T.aurora }}>+{p.minY}&ndash;{p.maxY}<span style={{ fontSize: 10, fontWeight: 500, color: T.sub, marginLeft: 2 }}>{u.U.yrs}</span></div>
       </div>
-      <h3 style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.deep, marginBottom: 2, letterSpacing: -0.3 }}>{p.title}</h3>
-      <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, marginBottom: 10, letterSpacing: -0.2 }}>{p.dose}</div>
-      <p style={{ fontSize: 12.5, lineHeight: 1.7, color: T.sub, marginBottom: 14 }}>{p.desc}</p>
+      <h3 style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.deep, marginBottom: 2, letterSpacing: -0.3 }}>{o.title || p.title}</h3>
+      <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, marginBottom: 10, letterSpacing: -0.2 }}>{o.dose || p.dose}</div>
+      <p style={{ fontSize: 12.5, lineHeight: 1.7, color: T.sub, marginBottom: 14 }}>{o.desc || p.desc}</p>
       <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "7px 12px", borderRadius: 8, background: "rgba(43,168,125,0.06)", border: "1px solid rgba(43,168,125,0.12)" }}>
         <span style={{ fontSize: 12 }}>{"\u{1F4A1}"}</span>
-        <span style={{ fontSize: 11, color: T.aurora, fontWeight: 600 }}>{p.insight}</span>
+        <span style={{ fontSize: 11, color: T.aurora, fontWeight: 600 }}>{o.insight || p.insight}</span>
       </div>
       <div style={{ marginTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ fontSize: 9.5, color: T.dim, fontFamily: T.mono }}>{p.study}</span>
-        <span style={{ fontSize: 11, color: T.accent, fontWeight: 600 }}>Learn more &rarr;</span>
+        <span style={{ fontSize: 9.5, color: T.dim, fontFamily: T.mono }}>{o.study || p.study}</span>
+        <span style={{ fontSize: 11, color: T.accent, fontWeight: 600 }}>{u.U.learnMore}</span>
       </div>
     </div>
   );
@@ -714,7 +751,10 @@ function PillarCard({ p, index, onOpen }) {
 
 /* ══════════════ DETAIL MODAL (scrollable overlay window) ══════════════ */
 function DetailModal({ pillarId, onClose }) {
+  var u = useUI();
   var data = PILLAR_DETAILS[pillarId];
+  var csd = (u.cs && CS.pillarDetails[pillarId]) || null;
+  var secs = (csd && csd.sections) ? csd.sections : (data ? data.sections : []);
   if (!data) return null;
   useEffect(function () { document.body.style.overflow = "hidden"; return function () { document.body.style.overflow = ""; }; }, []);
   return (
@@ -725,17 +765,17 @@ function DetailModal({ pillarId, onClose }) {
         <div style={{ padding: "28px 36px 20px", borderBottom: "1px solid " + T.glassBorder, position: "sticky", top: 0, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderRadius: "22px 22px 0 0", zIndex: 2 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: data.color, marginBottom: 4 }}>DEEP DIVE</div>
-              <h2 style={{ fontFamily: T.sans, fontSize: 24, fontWeight: 700, color: T.deep, letterSpacing: -0.5 }}>{data.title}</h2>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: data.color, marginBottom: 4 }}>{u.U.modal.deepDive}</div>
+              <h2 style={{ fontFamily: T.sans, fontSize: 24, fontWeight: 700, color: T.deep, letterSpacing: -0.5 }}>{(csd && csd.title) || data.title}</h2>
             </div>
             <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>&times;</button>
           </div>
         </div>
         {/* sections */}
         <div style={{ padding: "28px 36px 40px" }}>
-          {data.sections.map(function (sec, i) {
+          {secs.map(function (sec, i) {
             return (
-              <div key={i} style={{ marginBottom: i < data.sections.length - 1 ? 36 : 0 }}>
+              <div key={i} style={{ marginBottom: i < secs.length - 1 ? 36 : 0 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                   <div style={{ width: 5, height: 32, borderRadius: 3, background: data.color, flexShrink: 0 }} />
                   <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.3 }}>{sec.heading}</h3>
@@ -987,7 +1027,10 @@ function Faq({ q, a, light }) {
 
 /* ══════════════ BIOMARKER MODAL ══════════════ */
 function BiomarkerModal({ marker, onClose }) {
+  var u = useUI();
   if (!marker) return null;
+  var c = (u.cs && CS.biomarkers[marker.name]) || {};
+  var m = { name: c.name || marker.name, optimal: marker.optimal, freq: c.freq || marker.freq, what: c.what || marker.what, improve: c.improve || marker.improve, test: c.test || marker.test };
   useEffect(function () { document.body.style.overflow = "hidden"; return function () { document.body.style.overflow = ""; }; }, []);
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
@@ -995,28 +1038,28 @@ function BiomarkerModal({ marker, onClose }) {
       <div onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 620, width: "100%", maxHeight: "86vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25)", padding: "32px 36px 36px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
           <div>
-            <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: T.accent, marginBottom: 4 }}>Biomarker deep dive</div>
-            <h2 style={{ fontFamily: T.sans, fontSize: 26, fontWeight: 700, color: T.deep, letterSpacing: -0.6 }}>{marker.name}</h2>
+            <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: T.accent, marginBottom: 4 }}>{u.U.bio.mTitle}</div>
+            <h2 style={{ fontFamily: T.sans, fontSize: 26, fontWeight: 700, color: T.deep, letterSpacing: -0.6 }}>{m.name}</h2>
           </div>
           <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 99, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, lineHeight: 1, flexShrink: 0 }}>&times;</button>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
-          <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.aurora, background: "rgba(43,168,125,0.08)", border: "1px solid rgba(43,168,125,0.2)", borderRadius: 99, padding: "5px 14px" }}>Optimal: {marker.optimal}</span>
-          <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 600, color: T.sub, background: T.faint, border: "1px solid " + T.glassBorder, borderRadius: 99, padding: "5px 14px" }}>Test: {marker.freq}</span>
+          <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.aurora, background: "rgba(43,168,125,0.08)", border: "1px solid rgba(43,168,125,0.2)", borderRadius: 99, padding: "5px 14px" }}>{u.U.bio.mOptimal}: {m.optimal}</span>
+          <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 600, color: T.sub, background: T.faint, border: "1px solid " + T.glassBorder, borderRadius: 99, padding: "5px 14px" }}>{u.U.bio.mTest}: {m.freq}</span>
         </div>
-        <h3 style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, marginBottom: 8 }}>What it tells you</h3>
-        <p style={{ fontSize: 13.5, lineHeight: 1.8, color: T.sub, marginBottom: 20 }}>{marker.what}</p>
-        <h3 style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, marginBottom: 10 }}>How to improve it</h3>
+        <h3 style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, marginBottom: 8 }}>{u.U.bio.mWhat}</h3>
+        <p style={{ fontSize: 13.5, lineHeight: 1.8, color: T.sub, marginBottom: 20 }}>{m.what}</p>
+        <h3 style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, marginBottom: 10 }}>{u.U.bio.mHow}</h3>
         <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-          {marker.improve.map(function (it, i) { return (
+          {m.improve.map(function (it, i) { return (
             <div key={i} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
               <span style={{ color: T.aurora, fontWeight: 700, flexShrink: 0, fontSize: 13 }}>✓</span>
               <span style={{ fontSize: 13, lineHeight: 1.65, color: T.sub }}>{it}</span>
             </div>); })}
         </div>
         <div style={{ padding: "14px 18px", borderRadius: 14, background: T.faint, border: "1px solid " + T.glassBorder }}>
-          <span style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Testing notes</span>
-          <span style={{ fontSize: 12.5, lineHeight: 1.65, color: T.sub }}>{marker.test}</span>
+          <span style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase", display: "block", marginBottom: 4 }}>{u.U.bio.mNotes}</span>
+          <span style={{ fontSize: 12.5, lineHeight: 1.65, color: T.sub }}>{m.test}</span>
         </div>
       </div>
     </div>
@@ -1025,24 +1068,26 @@ function BiomarkerModal({ marker, onClose }) {
 
 /* ══════════════ GLOSSARY (searchable) ══════════════ */
 function GlossarySection() {
+  var u = useUI();
   var _s = useState(""), q = _s[0], setQ = _s[1];
-  var filtered = GLOSSARY.filter(function (g) { return (g.term + " " + g.def).toLowerCase().indexOf(q.toLowerCase()) !== -1; });
+  var items = GLOSSARY.map(function (g) { var c = u.cs && CS.glossary[g.term]; return { key: g.term, term: c ? c.t : g.term, def: c ? c.d : g.def }; });
+  var filtered = items.filter(function (g) { return (g.term + " " + g.def).toLowerCase().indexOf(q.toLowerCase()) !== -1; });
   return (
     <section id="glossary" style={{ padding: "96px 0", background: T.bgAlt }}>
       <div className="mx" style={{ maxWidth: 920 }}>
-        <SectionHead eyebrow="Speak the language" title="Longevity glossary" sub="Every term you'll meet in the research — and in the deep dives above — in plain words." />
+        <SectionHead eyebrow={u.U.glos.eyebrow} title={u.U.glos.title} sub={u.U.glos.sub} />
         <div style={{ maxWidth: 420, margin: "0 auto 32px", position: "relative" }}>
           <span style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", color: T.dim, fontSize: 14 }}>{"\u{1F50D}"}</span>
-          <input value={q} onChange={function (e) { setQ(e.target.value); }} placeholder={"Search " + GLOSSARY.length + " terms…"} style={{ width: "100%", padding: "13px 20px 13px 46px", borderRadius: 999, border: "1.5px solid " + T.glassBorder, fontFamily: T.sans, fontSize: 14, outline: "none", background: T.white, color: T.deep }} />
+          <input value={q} onChange={function (e) { setQ(e.target.value); }} placeholder={u.U.glos.search.replace("{n}", GLOSSARY.length)} style={{ width: "100%", padding: "13px 20px 13px 46px", borderRadius: 999, border: "1.5px solid " + T.glassBorder, fontFamily: T.sans, fontSize: 14, outline: "none", background: T.white, color: T.deep }} />
         </div>
         <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
           {filtered.map(function (g, i) { return (
-            <div key={g.term} className="liftcard" style={{ padding: "18px 20px", borderRadius: 16, background: T.white, border: "1px solid " + T.glassBorder }}>
+            <div key={g.key} className="liftcard" style={{ padding: "18px 20px", borderRadius: 16, background: T.white, border: "1px solid " + T.glassBorder }}>
               <div style={{ fontFamily: T.sans, fontSize: 14.5, fontWeight: 700, color: T.accent, marginBottom: 6 }}>{g.term}</div>
               <p style={{ fontSize: 12.5, lineHeight: 1.7, color: T.sub }}>{g.def}</p>
             </div>); })}
         </div>
-        {filtered.length === 0 && <p style={{ textAlign: "center", color: T.dim, fontSize: 13, marginTop: 10 }}>No terms match &ldquo;{q}&rdquo; — try a shorter query.</p>}
+        {filtered.length === 0 && <p style={{ textAlign: "center", color: T.dim, fontSize: 13, marginTop: 10 }}>{u.U.glos.none} &ldquo;{q}&rdquo;</p>}
       </div>
     </section>
   );
@@ -1054,9 +1099,17 @@ export default function App() {
   var _e = useState(false), emailSent = _e[0], setEmailSent = _e[1];
   var _m = useState(null), modal = _m[0], setModal = _m[1];
   var _bm = useState(null), bioModal = _bm[0], setBioModal = _bm[1];
+  var _lg = useState(function () { try { return localStorage.getItem("ll-lang") || "cs"; } catch (e) { return "cs"; } }), lang = _lg[0], setLang = _lg[1];
+  useEffect(function () { try { localStorage.setItem("ll-lang", lang); } catch (e) {} }, [lang]);
+  var U = UI[lang], cs = lang === "cs";
   var calcRef = useRef(null);
   var set = useCallback(function (k, v) { setInputs(function (p) { var n = {}; for (var x in p) n[x] = p[x]; n[k] = v; return n; }); }, []);
-  var result = useMemo(function () { return calcLifespan(inputs); }, [inputs]);
+  var LB = cs ? CS.lbl : LBL;
+  var BU = BIOUI[lang];
+  var _bio = useState({ apob: "", hba1c: "", crp: "", bp: "", vo2: "" }), bio = _bio[0], setBio = _bio[1];
+  var _bo = useState(false), bioOpen = _bo[0], setBioOpen = _bo[1];
+  var setB = function (k, v) { setBio(function (pv) { var n = {}; for (var x in pv) n[x] = pv[x]; n[k] = v; return n; }); };
+  var result = useMemo(function () { return calcLifespan(inputs, bio); }, [inputs, bio]);
   var top3 = useMemo(function () { return result.factors.slice().sort(function (a, b) { return b.years - a.years; }).slice(0, 3); }, [result]);
   var gained = r1(result.total - result.base);
   var gainedD = useAnim(gained);
@@ -1065,6 +1118,7 @@ export default function App() {
   var gc = function (s) { return { background: T.glass, backdropFilter: T.blur, WebkitBackdropFilter: T.blur, border: "1px solid " + T.glassBorder, borderRadius: T.radius, boxShadow: T.shadow, padding: s }; };
 
   return (
+    <LangCtx.Provider value={lang}>
     <>
       <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navlinks{display:none!important}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n@keyframes floaty{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(1.06)}100%{transform:translate(12px,-10px) scale(0.98)}}\n@keyframes marq{to{transform:translateX(-50%)}}\n.marq{display:flex;gap:56px;width:max-content;animation:marq 26s linear infinite;align-items:center}\n.marq:hover{animation-play-state:paused}\n.gradtxt{background:linear-gradient(95deg,#3B8CC4 10%,#2BA87D 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.navlink{position:relative}\n.navlink::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;border-radius:2px;background:#3B8CC4;transition:width 0.25s ease}\n.navlink:hover::after{width:100%}\n.liftcard{transition:transform 0.3s cubic-bezier(.4,0,.2,1),box-shadow 0.3s ease,border-color 0.3s ease}\n.liftcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(12,45,72,0.12),0 2px 8px rgba(12,45,72,0.06)!important;border-color:rgba(100,150,200,0.4)!important}\n      "}</style>
 
@@ -1076,9 +1130,16 @@ export default function App() {
         <div className="mx" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 28px" }}>
           <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15.5, color: T.deep, cursor: "pointer" }} onClick={function () { window.scrollTo({ top: 0, behavior: "smooth" }); }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
           <div className="navlinks" style={{ display: "flex", gap: 26, alignItems: "center" }}>
-            {[["Science", "pillars"], ["Protocol", "protocol"], ["Biomarkers", "biomarkers"], ["Glossary", "glossary"], ["FAQ", "faq"]].map(function (l) { return <span key={l[1]} className="navlink" onClick={function () { goTo(l[1]); }} style={{ fontSize: 13.5, fontWeight: 600, color: T.mid, cursor: "pointer" }}>{l[0]}</span>; })}
+            {[[U.nav.science, "pillars"], [U.nav.protocol, "protocol"], [U.nav.biomarkers, "biomarkers"], [U.nav.glossary, "glossary"], [U.nav.faq, "faq"]].map(function (l) { return <span key={l[1]} className="navlink" onClick={function () { goTo(l[1]); }} style={{ fontSize: 13.5, fontWeight: 600, color: T.mid, cursor: "pointer" }}>{l[0]}</span>; })}
           </div>
-          <PillBtn primary onClick={scrollCalc}>Calculate now</PillBtn>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ display: "flex", background: "rgba(255,255,255,0.55)", border: "1px solid " + T.glassBorder, borderRadius: 99, overflow: "hidden" }}>
+              {["cs", "en"].map(function (l) { return (
+                <button key={l} onClick={function () { setLang(l); }} style={{ padding: "5px 11px", background: lang === l ? T.accent : "transparent", color: lang === l ? T.white : T.sub, border: "none", cursor: "pointer", fontFamily: T.mono, fontSize: 11, fontWeight: 700, textTransform: "uppercase" }}>{l}</button>
+              ); })}
+            </div>
+            <PillBtn primary onClick={scrollCalc}>{U.nav.calcNow}</PillBtn>
+          </div>
         </div>
         <ScrollProgress />
       </nav>
@@ -1089,21 +1150,16 @@ export default function App() {
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 820, padding: "0 28px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 99, background: T.glass, border: "1px solid " + T.glassBorder, marginBottom: 30, backdropFilter: T.blurLight }}>
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: T.aurora, display: "inline-block" }} />
-            <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.sub, letterSpacing: 1.2, textTransform: "uppercase" }}>Evidence-based healthspan, no hype</span>
+            <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.sub, letterSpacing: 1.2, textTransform: "uppercase" }}>{U.hero.badge}</span>
           </div>
-          <h1 style={{ fontFamily: T.sans, fontSize: "clamp(38px,6.5vw,68px)", fontWeight: 700, color: T.deep, lineHeight: 1.05, marginBottom: 22, letterSpacing: -2 }}>Your wealth is<br /><span className="gradtxt">measured in years</span></h1>
-          <p style={{ fontSize: "clamp(15px,1.8vw,18.5px)", color: T.sub, lineHeight: 1.78, maxWidth: 580, margin: "0 auto 38px" }}>From your first habit to a lifelong protocol, Longevity Lab gives you simple, research-backed tools to build, manage, and preserve your healthspan over time.</p>
+          <h1 style={{ fontFamily: T.sans, fontSize: "clamp(38px,6.5vw,68px)", fontWeight: 700, color: T.deep, lineHeight: 1.05, marginBottom: 22, letterSpacing: -2 }}>{U.hero.h1a}<br /><span className="gradtxt">{U.hero.h1b}</span></h1>
+          <p style={{ fontSize: "clamp(15px,1.8vw,18.5px)", color: T.sub, lineHeight: 1.78, maxWidth: 580, margin: "0 auto 38px" }}>{U.hero.lead}</p>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 52 }}>
-            <PillBtn primary big onClick={scrollCalc} style={{ animation: "gp 3s ease-in-out infinite" }}>Calculate my lifespan</PillBtn>
-            <PillBtn big onClick={function () { goTo("pillars"); }}>Explore the science</PillBtn>
+            <PillBtn primary big onClick={scrollCalc} style={{ animation: "gp 3s ease-in-out infinite" }}>{U.hero.ctaCalc}</PillBtn>
+            <PillBtn big onClick={function () { goTo("pillars"); }}>{U.hero.ctaScience}</PillBtn>
           </div>
           <div className="hs" style={{ display: "flex", gap: 0, justifyContent: "center", flexWrap: "wrap", ...gc("10px 8px") }}>
-            {[
-              { t: "Peer-reviewed", s: "6 meta-analyses. 308K+ participants." },
-              { t: "+36.5 years", s: "Maximum gainable across 7 pillars." },
-              { t: "Personalized", s: "A 3D avatar that mirrors your habits." },
-              { t: "Actionable", s: "30-day protocol. Zero guesswork." },
-            ].map(function (b, i) { return (
+            {U.hero.trust.map(function (b, i) { return (
               <div key={i} style={{ padding: "10px 26px", textAlign: "center", borderLeft: i > 0 ? "1px solid " + T.glassBorder : "none" }}>
                 <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14.5, color: T.deep }}>{b.t}</div>
                 <div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{b.s}</div>
@@ -1127,17 +1183,17 @@ export default function App() {
         <div className="mx" style={{ maxWidth: 980 }}>
           <div className="cg" style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 48, alignItems: "center" }}>
             <div>
-              <Eyebrow>Why healthspan?</Eyebrow>
-              <h2 style={{ fontFamily: T.sans, fontSize: "clamp(28px,4vw,40px)", fontWeight: 700, color: T.deep, letterSpacing: -1, lineHeight: 1.15, marginBottom: 18 }}>Because lifespan without health is the wrong goal</h2>
-              <p style={{ fontSize: 15, color: T.sub, lineHeight: 1.85, marginBottom: 14 }}>The average person spends their final decade managing disease — a quiet erosion of the years they worked hardest to reach. That gap between how long we live and how long we live <em>well</em> is the real problem.</p>
-              <p style={{ fontSize: 15, color: T.sub, lineHeight: 1.85 }}>Healthspan was built differently. It compounds like capital: every workout, every consistent night of sleep, every shared meal is a deposit. The science below shows exactly where the interest rates are highest — chosen by people who want decades that work on their own terms.</p>
+              <Eyebrow>{U.why.eyebrow}</Eyebrow>
+              <h2 style={{ fontFamily: T.sans, fontSize: "clamp(28px,4vw,40px)", fontWeight: 700, color: T.deep, letterSpacing: -1, lineHeight: 1.15, marginBottom: 18 }}>{U.why.title}</h2>
+              <p style={{ fontSize: 15, color: T.sub, lineHeight: 1.85, marginBottom: 14 }}>{U.why.p1}</p>
+              <p style={{ fontSize: 15, color: T.sub, lineHeight: 1.85 }}>{U.why.p2}</p>
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
               {WHY_STATS.map(function (s, i) { return (
                 <Reveal key={i} delay={i * 0.12}>
                   <div className="liftcard" style={{ ...gc("20px 24px"), display: "flex", alignItems: "center", gap: 18 }}>
                     <div style={{ fontFamily: T.mono, fontSize: 24, fontWeight: 700, color: T.aurora, whiteSpace: "nowrap", minWidth: 92 }}><CountUp to={s.n} pre={s.pre} suf={s.suf} /></div>
-                    <div style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.55 }}>{s.l}</div>
+                    <div style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.55 }}>{cs && CS.why[i] ? CS.why[i] : s.l}</div>
                   </div>
                 </Reveal>); })}
             </div>
@@ -1148,15 +1204,15 @@ export default function App() {
       {/* SOLUTION CARDS */}
       <section style={{ padding: "96px 0 80px" }}>
         <div className="mx">
-          <SectionHead eyebrow="The approach" title="Science is the answer. This is how you get there" sub="A focused platform for people who want to build long-term health — not chase trends, not biohack blindly, not guess." />
+          <SectionHead eyebrow={U.solution.eyebrow} title={U.solution.title} sub={U.solution.sub} />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
             {SOLUTION_CARDS.map(function (c, i) { return (
               <Reveal key={i} delay={i * 0.14} style={{ height: "100%" }}>
                 <div className="liftcard" style={{ ...gc("30px 28px"), display: "flex", flexDirection: "column", height: "100%" }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: T.faint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18 }}>{c.icon}</div>
-                  <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.4, marginBottom: 10 }}>{c.title}</h3>
-                  <p style={{ fontSize: 13.5, lineHeight: 1.75, color: T.sub, flex: 1, marginBottom: 16 }}>{c.body}</p>
-                  <span onClick={function () { goTo(c.link.slice(1)); }} style={{ fontSize: 13, color: T.accent, fontWeight: 600, cursor: "pointer" }}>{c.cta}</span>
+                  <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.4, marginBottom: 10 }}>{cs && CS.solution[i] ? CS.solution[i].title : c.title}</h3>
+                  <p style={{ fontSize: 13.5, lineHeight: 1.75, color: T.sub, flex: 1, marginBottom: 16 }}>{cs && CS.solution[i] ? CS.solution[i].body : c.body}</p>
+                  <span onClick={function () { goTo(c.link.slice(1)); }} style={{ fontSize: 13, color: T.accent, fontWeight: 600, cursor: "pointer" }}>{cs && CS.solution[i] ? CS.solution[i].cta : c.cta}</span>
                 </div>
               </Reveal>); })}
           </div>
@@ -1166,7 +1222,7 @@ export default function App() {
       {/* PILLARS (clickable) */}
       <section id="pillars" style={{ padding: "80px 0", background: T.bgAlt }}>
         <div className="mx">
-          <SectionHead eyebrow="The science" title="Every pillar, covered" sub="Seven habits with the strongest mortality evidence in the literature. Click any card to deep-dive into the biology, research, and practical protocols." />
+          <SectionHead eyebrow={U.pillars.eyebrow} title={U.pillars.title} sub={U.pillars.sub} />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(300px,1fr))", gap: 16 }}>
             {PILLARS.map(function (p, i) { return <PillarCard key={p.id} p={p} index={i} onOpen={setModal} />; })}
           </div>
@@ -1178,64 +1234,97 @@ export default function App() {
       {/* CALCULATOR */}
       <section id="calculator" ref={calcRef} style={{ padding: "88px 0 100px" }}>
         <div className="mx">
-          <SectionHead eyebrow="Interactive calculator" title={<span>How long will <em style={{ fontStyle: "italic", color: T.accent }}>you</em> live?</span>} sub="Move the sliders. Your avatar, your biological age, and your estimate update in real time." />
+          <SectionHead eyebrow={U.calc.eyebrow} title={<span>{U.calc.titleA}<em style={{ fontStyle: "italic", color: T.accent }}>{U.calc.titleEm}</em>{U.calc.titleB}</span>} sub={U.calc.sub} />
 
           <div className="cg" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "start" }}>
             {/* INPUTS */}
             <div style={gc(32)}>
-              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>BASICS</div>
-              <Sl label="Your Age" value={inputs.age} onChange={function (v) { set("age", v); }} min={18} max={90} />
+              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.basics}</div>
+              <Sl label={U.calc.age} value={inputs.age} onChange={function (v) { set("age", v); }} min={18} max={90} />
               <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-                {["male", "female"].map(function (s) { return (<button key={s} onClick={function () { set("sex", s); }} style={{ flex: 1, padding: "10px 0", borderRadius: 10, fontSize: 13, fontFamily: T.sans, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: inputs.sex === s ? T.accent : T.glass, color: inputs.sex === s ? T.white : T.sub, border: "1.5px solid " + (inputs.sex === s ? T.accent : T.glassBorder), boxShadow: inputs.sex === s ? "0 2px 8px rgba(59,140,196,0.2)" : "none" }}>{s === "male" ? "Male" : "Female"}</button>); })}
+                {["male", "female"].map(function (s) { return (<button key={s} onClick={function () { set("sex", s); }} style={{ flex: 1, padding: "10px 0", borderRadius: 10, fontSize: 13, fontFamily: T.sans, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: inputs.sex === s ? T.accent : T.glass, color: inputs.sex === s ? T.white : T.sub, border: "1.5px solid " + (inputs.sex === s ? T.accent : T.glassBorder), boxShadow: inputs.sex === s ? "0 2px 8px rgba(59,140,196,0.2)" : "none" }}>{s === "male" ? U.calc.male : U.calc.female}</button>); })}
               </div>
               <div style={{ height: 1, background: T.glassBorder, margin: "4px 0 20px" }} />
-              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>ACTIVITY</div>
-              <Sl label="Exercise (days/week)" value={inputs.exerciseDays} onChange={function (v) { set("exerciseDays", v); }} min={0} max={7} />
-              <Sl label="Exercise Intensity" value={inputs.exerciseIntensity} onChange={function (v) { set("exerciseIntensity", v); }} min={1} max={10} dv={lb(LBL.intensity, inputs.exerciseIntensity)} />
-              <Sl label="Sauna (sessions/week)" value={inputs.saunaSessions} onChange={function (v) { set("saunaSessions", v); }} min={0} max={7} />
-              <Sl label="Cold Exposure" value={inputs.coldExposure} onChange={function (v) { set("coldExposure", v); }} min={0} max={10} dv={lb(LBL.cold, inputs.coldExposure)} />
+              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.activity}</div>
+              <Sl label={U.calc.exDays} value={inputs.exerciseDays} onChange={function (v) { set("exerciseDays", v); }} min={0} max={7} />
+              <Sl label={U.calc.exInt} value={inputs.exerciseIntensity} onChange={function (v) { set("exerciseIntensity", v); }} min={1} max={10} dv={lb(LB.intensity, inputs.exerciseIntensity)} />
+              <Sl label={U.calc.sauna} value={inputs.saunaSessions} onChange={function (v) { set("saunaSessions", v); }} min={0} max={7} />
+              <Sl label={U.calc.cold} value={inputs.coldExposure} onChange={function (v) { set("coldExposure", v); }} min={0} max={10} dv={lb(LB.cold, inputs.coldExposure)} />
               <div style={{ height: 1, background: T.glassBorder, margin: "4px 0 20px" }} />
-              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>LIFESTYLE</div>
-              <Sl label="Diet Quality" value={inputs.dietScore} onChange={function (v) { set("dietScore", v); }} dv={lb(LBL.diet, inputs.dietScore)} />
-              <Sl label="Sleep Regularity" value={inputs.sleepScore} onChange={function (v) { set("sleepScore", v); }} dv={lb(LBL.sleep, inputs.sleepScore)} />
-              <Sl label="Supplements" value={inputs.supplementScore} onChange={function (v) { set("supplementScore", v); }} dv={lb(LBL.supps, inputs.supplementScore)} />
-              <Sl label="Social Connection" value={inputs.socialScore} onChange={function (v) { set("socialScore", v); }} dv={lb(LBL.social, inputs.socialScore)} />
+              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.lifestyle}</div>
+              <Sl label={U.calc.diet} value={inputs.dietScore} onChange={function (v) { set("dietScore", v); }} dv={lb(LB.diet, inputs.dietScore)} />
+              <Sl label={U.calc.sleep} value={inputs.sleepScore} onChange={function (v) { set("sleepScore", v); }} dv={lb(LB.sleep, inputs.sleepScore)} />
+              <Sl label={U.calc.supps} value={inputs.supplementScore} onChange={function (v) { set("supplementScore", v); }} dv={lb(LB.supps, inputs.supplementScore)} />
+              <Sl label={U.calc.social} value={inputs.socialScore} onChange={function (v) { set("socialScore", v); }} dv={lb(LB.social, inputs.socialScore)} />
               <div style={{ height: 1, background: T.glassBorder, margin: "4px 0 20px" }} />
-              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>RISK FACTORS</div>
-              <Sl label="Smoking" value={inputs.smokingStatus} onChange={function (v) { set("smokingStatus", v); }} min={0} max={2} dv={lb(LBL.smoking, inputs.smokingStatus)} />
-              <Sl label="Alcohol" value={inputs.alcoholScore} onChange={function (v) { set("alcoholScore", v); }} dv={lb(LBL.alcohol, inputs.alcoholScore)} />
+              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.risk}</div>
+              <Sl label={U.calc.smoking} value={inputs.smokingStatus} onChange={function (v) { set("smokingStatus", v); }} min={0} max={2} dv={lb(LB.smoking, inputs.smokingStatus)} />
+              <Sl label={U.calc.alcohol} value={inputs.alcoholScore} onChange={function (v) { set("alcoholScore", v); }} dv={lb(LB.alcohol, inputs.alcoholScore)} />
+
+              <div style={{ height: 1, background: T.glassBorder, margin: "18px 0 14px" }} />
+              <button onClick={function () { setBioOpen(!bioOpen); }} style={{ width: "100%", display: "flex", justifyContent: "space-between", alignItems: "center", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, letterSpacing: 2, textAlign: "left" }}>{BU.title}</span>
+                <span style={{ fontSize: 11, color: T.accent, fontWeight: 600, whiteSpace: "nowrap", marginLeft: 8 }}>{bioOpen ? BU.hide : BU.show}</span>
+              </button>
+              {bioOpen && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 11.5, color: T.dim, lineHeight: 1.6, marginBottom: 14 }}>{BU.hint}</p>
+                  {[["apob", BU.apob, BU.uApob, "80"], ["hba1c", BU.hba1c, BU.uHba1c, "5.4"], ["crp", BU.crp, BU.uCrp, "1.0"], ["bp", BU.bp, BU.uBp, "120"], ["vo2", BU.vo2, BU.uVo2, "38"]].map(function (f) {
+                    return (
+                      <div key={f[0]} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
+                        <span style={{ flex: 1, fontSize: 12.5, color: T.text, fontWeight: 500 }}>{f[1]}</span>
+                        <input type="number" step="any" value={bio[f[0]]} placeholder={f[3]} onChange={function (e) { setB(f[0], e.target.value); }}
+                          style={{ width: 78, padding: "7px 10px", borderRadius: 8, border: "1.5px solid " + T.glassBorder, background: T.white, color: T.deep, fontFamily: T.mono, fontSize: 13, textAlign: "right" }} />
+                        <span style={{ width: 64, fontSize: 10.5, color: T.dim, fontFamily: T.mono }}>{f[2]}</span>
+                      </div>
+                    );
+                  })}
+                  <button onClick={function () { setBio({ apob: "", hba1c: "", crp: "", bp: "", vo2: "" }); }} style={{ marginTop: 4, background: "none", border: "none", color: T.dim, fontSize: 11, cursor: "pointer", padding: 0, textDecoration: "underline" }}>{BU.clear}</button>
+                  {result.bioUsed && (
+                    <div style={{ marginTop: 12, padding: "9px 12px", borderRadius: 10, background: result.bioAdj >= 0 ? "rgba(43,168,125,0.07)" : "rgba(217,88,67,0.07)", border: "1px solid " + (result.bioAdj >= 0 ? "rgba(43,168,125,0.20)" : "rgba(217,88,67,0.20)"), display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: 11.5, color: T.sub }}>{BU.adj}</span>
+                      <span style={{ fontFamily: T.mono, fontWeight: 700, fontSize: 12.5, color: result.bioAdj >= 0 ? T.aurora : T.warm }}>{result.bioAdj >= 0 ? "+" : ""}{result.bioAdj.toFixed(1)} {U.yrs}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* RESULTS */}
             <div style={{ position: "sticky", top: 20 }}>
               {/* character */}
               <div style={{ ...gc("20px 20px 12px"), textAlign: "center", marginBottom: 14 }}>
-                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 8 }}>YOUR AVATAR</div>
+                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 8 }}>{U.calc.avatar}</div>
                 <Avatar2D inputs={inputs} gained={gained} />
-                <div style={{ fontSize: 11, color: T.dim, marginTop: 8, fontStyle: "italic" }}>Reacts to every slider &middot; drag to rotate</div>
+                <div style={{ fontSize: 11, color: T.dim, marginTop: 8, fontStyle: "italic" }}>{U.calc.avatarNote}</div>
               </div>
 
               {/* gauge */}
               <div style={{ ...gc("28px 24px"), textAlign: "center", marginBottom: 14 }}>
-                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 10 }}>ESTIMATED LIFESPAN</div>
+                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 10 }}>{U.calc.estLifespan}</div>
                 <Gauge value={result.total} />
+                <div style={{ marginTop: 2, marginBottom: 4 }}>
+                  <div style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: 1.4, color: T.dim, textTransform: "uppercase" }}>{BU.range}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 15, fontWeight: 700, color: T.mid }}>{result.low} &ndash; {result.high}</div>
+                </div>
                 <div style={{ marginTop: 12, display: "flex", justifyContent: "center", gap: 24 }}>
-                  <div><div style={{ fontSize: 10, color: T.dim }}>Baseline</div><div style={{ fontFamily: T.mono, fontWeight: 700, color: T.deep, fontSize: 17 }}>{result.base}</div></div>
+                  <div><div style={{ fontSize: 10, color: T.dim }}>{U.calc.baseline}</div><div style={{ fontFamily: T.mono, fontWeight: 700, color: T.deep, fontSize: 17 }}>{result.base}</div></div>
                   <div style={{ width: 1, background: T.glassBorder }} />
-                  <div><div style={{ fontSize: 10, color: T.dim }}>Your Gain</div><div style={{ fontFamily: T.mono, fontWeight: 700, color: gained >= 0 ? T.aurora : T.warm, fontSize: 17 }}>{gained >= 0 ? "+" : ""}{gainedD}</div></div>
+                  <div><div style={{ fontSize: 10, color: T.dim }}>{U.calc.yourGain}</div><div style={{ fontFamily: T.mono, fontWeight: 700, color: gained >= 0 ? T.aurora : T.warm, fontSize: 17 }}>{gained >= 0 ? "+" : ""}{gainedD}</div></div>
                 </div>
               </div>
 
               {/* top 3 */}
               <div style={{ ...gc("20px 22px"), marginBottom: 14 }}>
-                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 10 }}>TOP 3 GAINS</div>
+                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 10 }}>{U.calc.top3}</div>
                 {top3.map(function (f, i) { return (<div key={f.key} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: i < 2 ? 8 : 0 }}><div style={{ width: 24, height: 24, borderRadius: 7, background: f.color, display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontFamily: T.mono, fontWeight: 700, fontSize: 11 }}>{i + 1}</div><span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: T.deep }}>{f.label}</span><span style={{ fontFamily: T.mono, fontWeight: 700, color: T.aurora, fontSize: 13 }}>+{f.years.toFixed(1)}y</span></div>); })}
               </div>
 
               {/* breakdown */}
               <div style={gc("20px 22px")}>
-                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 10 }}>FULL BREAKDOWN</div>
+                <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 10 }}>{U.calc.breakdown}</div>
                 <Bars factors={result.factors} />
+                <p style={{ fontSize: 10.5, color: T.dim, lineHeight: 1.6, marginTop: 12, paddingTop: 10, borderTop: "1px solid " + T.glassBorder }}>{BU.method} {BU.rangeNote}</p>
               </div>
             </div>
           </div>
@@ -1245,17 +1334,17 @@ export default function App() {
       {/* 30-DAY PROTOCOL */}
       <section id="protocol" style={{ padding: "96px 0", background: T.bgAlt }}>
         <div className="mx" style={{ maxWidth: 880 }}>
-          <SectionHead eyebrow="Getting started" title="Set up in 30 days, built for 30 years" sub="One theme per week, a few small actions per day. Compliance beats perfection — this is the on-ramp, not the destination." />
+          <SectionHead eyebrow={U.protocol.eyebrow} title={U.protocol.title} sub={U.protocol.sub} />
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
             {PROTOCOL.map(function (w, i) { return (
               <Reveal key={i} delay={i * 0.1}>
               <div style={{ ...gc("26px 30px"), display: "grid", gridTemplateColumns: "120px 1fr", gap: 24 }} className="er liftcard">
                 <div>
-                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase" }}>{w.week}</div>
-                  <div style={{ fontFamily: T.sans, fontSize: 19, fontWeight: 700, color: w.color, letterSpacing: -0.4, marginTop: 2 }}>{w.theme}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: 1.5, color: T.dim, textTransform: "uppercase" }}>{cs && CS.protocol[i] ? CS.protocol[i].week : w.week}</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 19, fontWeight: 700, color: w.color, letterSpacing: -0.4, marginTop: 2 }}>{cs && CS.protocol[i] ? CS.protocol[i].theme : w.theme}</div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                  {w.items.map(function (it, j) { return (
+                  {(cs && CS.protocol[i] ? CS.protocol[i].items : w.items).map(function (it, j) { return (
                     <div key={j} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                       <span style={{ width: 18, height: 18, borderRadius: 99, background: w.color + "22", color: w.color, fontSize: 10.5, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2, fontFamily: T.mono }}>{j + 1}</span>
                       <span style={{ fontSize: 13.5, color: T.sub, lineHeight: 1.65 }}>{it}</span>
@@ -1270,7 +1359,7 @@ export default function App() {
       {/* BIOMARKERS — deep band */}
       <section id="biomarkers" style={{ padding: "96px 0", background: "linear-gradient(180deg," + T.deep + " 0%,#11385A 100%)" }}>
         <div className="mx">
-          <SectionHead light eyebrow="Measure what matters" title="Nine numbers worth knowing" sub="Feelings lie; bloodwork doesn't. These markers catch problems a decade before symptoms — most are available in one standard panel." />
+          <SectionHead light eyebrow={U.bio.eyebrow} title={U.bio.title} sub={U.bio.sub} />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
             {BIOMARKERS.map(function (b, i) { return (
               <Reveal key={i} delay={(i % 3) * 0.1} style={{ height: "100%" }}>
@@ -1278,34 +1367,34 @@ export default function App() {
                   onMouseEnter={function (e) { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "rgba(92,201,160,0.4)"; }}
                   onMouseLeave={function (e) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = "rgba(140,170,200,0.2)"; }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                    <span style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.white }}>{b.name}</span>
-                    <span style={{ fontFamily: T.mono, fontSize: 10, color: T.ice, opacity: 0.7 }}>{b.freq}</span>
+                    <span style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.white }}>{(cs && CS.biomarkers[b.name] ? CS.biomarkers[b.name].name : b.name)}</span>
+                    <span style={{ fontFamily: T.mono, fontSize: 10, color: T.ice, opacity: 0.7 }}>{(cs && CS.biomarkers[b.name] ? CS.biomarkers[b.name].freq : b.freq)}</span>
                   </div>
                   <div style={{ display: "inline-block", fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.auroraLight, background: "rgba(43,168,125,0.12)", border: "1px solid rgba(92,201,160,0.25)", borderRadius: 99, padding: "3px 12px", marginBottom: 10 }}>{b.optimal}</div>
-                  <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "rgba(214,232,243,0.75)", marginBottom: 10 }}>{b.why}</p>
-                  <span style={{ fontSize: 11.5, color: T.auroraLight, fontWeight: 600 }}>Deep dive →</span>
+                  <p style={{ fontSize: 12.5, lineHeight: 1.7, color: "rgba(214,232,243,0.75)", marginBottom: 10 }}>{(cs && CS.biomarkers[b.name] ? CS.biomarkers[b.name].why : b.why)}</p>
+                  <span style={{ fontSize: 11.5, color: T.auroraLight, fontWeight: 600 }}>{U.bio.deepDive}</span>
                 </div>
               </Reveal>); })}
           </div>
-          <p style={{ textAlign: "center", fontSize: 11.5, color: "rgba(214,232,243,0.5)", marginTop: 28 }}>Optimal ranges reflect longevity-medicine targets, which are stricter than standard lab reference ranges. Discuss results with your physician.</p>
+          <p style={{ textAlign: "center", fontSize: 11.5, color: "rgba(214,232,243,0.5)", marginTop: 28 }}>{U.bio.note}</p>
         </div>
       </section>
 
       {/* MYTHS */}
       <section style={{ padding: "96px 0 80px" }}>
         <div className="mx" style={{ maxWidth: 920 }}>
-          <SectionHead eyebrow="Clear thinking" title="Myths, debunked" sub="The longevity space is loud. Here's what the evidence actually supports." />
+          <SectionHead eyebrow={U.myths.eyebrow} title={U.myths.title} sub={U.myths.sub} />
           <div className="cg" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
             {MYTHS.map(function (m, i) { return (
               <Reveal key={i} delay={(i % 2) * 0.12} style={{ height: "100%" }}>
               <div className="liftcard" style={{ ...gc("24px 26px"), height: "100%" }}>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start", marginBottom: 10 }}>
                   <span style={{ color: T.warm, fontWeight: 700, fontSize: 15, flexShrink: 0 }}>✗</span>
-                  <span style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, lineHeight: 1.4, textDecoration: "line-through", textDecorationColor: "rgba(217,88,67,0.45)", textDecorationThickness: 2 }}>{m.myth}</span>
+                  <span style={{ fontFamily: T.sans, fontSize: 15, fontWeight: 700, color: T.deep, lineHeight: 1.4, textDecoration: "line-through", textDecorationColor: "rgba(217,88,67,0.45)", textDecorationThickness: 2 }}>{cs && CS.myths[i] ? CS.myths[i].myth : m.myth}</span>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                   <span style={{ color: T.aurora, fontWeight: 700, fontSize: 14, flexShrink: 0 }}>✓</span>
-                  <p style={{ fontSize: 13, lineHeight: 1.75, color: T.sub }}>{m.truth}</p>
+                  <p style={{ fontSize: 13, lineHeight: 1.75, color: T.sub }}>{cs && CS.myths[i] ? CS.myths[i].truth : m.truth}</p>
                 </div>
               </div>
               </Reveal>); })}
@@ -1316,15 +1405,15 @@ export default function App() {
       {/* HALLMARKS OF AGING */}
       <section style={{ padding: "96px 0", background: T.white, borderTop: "1px solid " + T.glassBorder, borderBottom: "1px solid " + T.glassBorder }}>
         <div className="mx">
-          <SectionHead eyebrow="The mechanism map" title="The 12 hallmarks of aging" sub="Why we age, according to the canonical framework of modern geroscience (López-Otín et al., Cell 2023) — and which pillars push back on each one." />
+          <SectionHead eyebrow={U.hall.eyebrow} title={U.hall.title} sub={U.hall.sub} />
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12 }}>
             {HALLMARKS.map(function (h, i) { return (
               <Reveal key={i} delay={(i % 4) * 0.08} style={{ height: "100%" }}>
                 <div className="liftcard" style={{ padding: "20px 20px", borderRadius: 16, background: T.bg, border: "1px solid " + T.glassBorder, height: "100%", display: "flex", flexDirection: "column" }}>
                   <div style={{ fontSize: 22, marginBottom: 10 }}>{h.icon}</div>
-                  <div style={{ fontFamily: T.sans, fontSize: 13.5, fontWeight: 700, color: T.deep, marginBottom: 6, letterSpacing: -0.2 }}>{h.name}</div>
-                  <p style={{ fontSize: 11.5, lineHeight: 1.65, color: T.sub, flex: 1, marginBottom: 10 }}>{h.desc}</p>
-                  <div style={{ fontFamily: T.mono, fontSize: 9.5, color: T.aurora, letterSpacing: 0.5, paddingTop: 8, borderTop: "1px dashed " + T.glassBorder }}>↳ {h.pillars}</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 13.5, fontWeight: 700, color: T.deep, marginBottom: 6, letterSpacing: -0.2 }}>{(cs && CS.hallmarks[h.name] ? CS.hallmarks[h.name].name : h.name)}</div>
+                  <p style={{ fontSize: 11.5, lineHeight: 1.65, color: T.sub, flex: 1, marginBottom: 10 }}>{(cs && CS.hallmarks[h.name] ? CS.hallmarks[h.name].desc : h.desc)}</p>
+                  <div style={{ fontFamily: T.mono, fontSize: 9.5, color: T.aurora, letterSpacing: 0.5, paddingTop: 8, borderTop: "1px dashed " + T.glassBorder }}>↳ {(cs && CS.hallmarks[h.name] ? CS.hallmarks[h.name].pillars : h.pillars)}</div>
                 </div>
               </Reveal>); })}
           </div>
@@ -1334,14 +1423,14 @@ export default function App() {
       {/* EVIDENCE */}
       <section style={{ padding: "76px 0", background: T.bgAlt }}>
         <div className="mx">
-          <SectionHead eyebrow="Peer-reviewed research" title="The evidence wall" sub="The primary studies behind every number on this site." />
+          <SectionHead eyebrow={U.evid.eyebrow} title={U.evid.title} sub={U.evid.sub} />
           <div style={{ display: "grid", gap: 2 }}>
             {EVIDENCE.map(function (s, i) { return (<a key={i} href={s.url} target="_blank" rel="noopener noreferrer" className="er" style={{ textDecoration: "none", padding: "16px 22px", display: "grid", gridTemplateColumns: "50px 1fr 200px", gap: 14, alignItems: "center", background: T.white, border: "1px solid " + T.glassBorder, borderRadius: i === 0 ? "12px 12px 0 0" : i === EVIDENCE.length - 1 ? "0 0 12px 12px" : "0", transition: "background 0.2s ease" }}
               onMouseEnter={function (e) { e.currentTarget.style.background = T.faint; }}
               onMouseLeave={function (e) { e.currentTarget.style.background = T.white; }}>
               <div style={{ fontFamily: T.mono, fontSize: 16, fontWeight: 700, color: T.accent }}>{s.year}</div>
-              <div><div style={{ fontSize: 13, fontWeight: 600, color: T.deep, lineHeight: 1.4 }}>{s.title}</div><div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{s.a} &middot; {s.j}</div></div>
-              <div style={{ textAlign: "right" }}><div style={{ fontSize: 11.5, color: T.aurora, fontFamily: T.mono, fontWeight: 600 }}>{s.f}</div><div style={{ fontSize: 10.5, color: T.accent, fontWeight: 600, marginTop: 3 }}>Read study ↗</div></div>
+              <div><div style={{ fontSize: 13, fontWeight: 600, color: T.deep, lineHeight: 1.4 }}>{(cs && CS.evidence[s.year] ? CS.evidence[s.year].title : s.title)}</div><div style={{ fontSize: 11, color: T.dim, marginTop: 2 }}>{s.a} &middot; {s.j}</div></div>
+              <div style={{ textAlign: "right" }}><div style={{ fontSize: 11.5, color: T.aurora, fontFamily: T.mono, fontWeight: 600 }}>{(cs && CS.evidence[s.year] ? CS.evidence[s.year].f : s.f)}</div><div style={{ fontSize: 10.5, color: T.accent, fontWeight: 600, marginTop: 3 }}>{U.evid.read}</div></div>
             </a>); })}
           </div>
         </div>
@@ -1352,8 +1441,8 @@ export default function App() {
       {/* FAQ */}
       <section id="faq" style={{ padding: "96px 0" }}>
         <div className="mx" style={{ maxWidth: 760 }}>
-          <SectionHead eyebrow="FAQ" title="Frequently asked questions" />
-          {FAQS.map(function (f, i) { return <Faq key={i} q={f.q} a={f.a} />; })}
+          <SectionHead eyebrow={U.faq.eyebrow} title={U.faq.title} />
+          {FAQS.map(function (f, i) { var o = cs && CS.faqs[i] ? CS.faqs[i] : f; return <Faq key={i} q={o.q} a={o.a} />; })}
         </div>
       </section>
 
@@ -1363,18 +1452,18 @@ export default function App() {
           <div style={{ borderRadius: 28, padding: "clamp(40px,6vw,72px) clamp(24px,5vw,64px)", textAlign: "center", background: "linear-gradient(135deg," + T.deep + " 0%,#16466B 60%,#1E5E5A 100%)", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: "-40%", right: "-10%", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle,rgba(92,201,160,0.18),transparent 70%)", pointerEvents: "none" }} />
             <div style={{ position: "relative" }}>
-              <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4.5vw,44px)", fontWeight: 700, color: T.white, letterSpacing: -1.2, lineHeight: 1.12, marginBottom: 14 }}>Start, build, and preserve<br />your healthspan</h2>
-              <p style={{ color: "rgba(214,232,243,0.75)", fontSize: 15, lineHeight: 1.7, marginBottom: 30, maxWidth: 480, margin: "0 auto 30px" }}>New longevity research every month, distilled into actionable insights. No hype, no price calls \u2014 frameworks and clear thinking.</p>
+              <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4.5vw,44px)", fontWeight: 700, color: T.white, letterSpacing: -1.2, lineHeight: 1.12, marginBottom: 14 }}>{U.cta.titleA}<br />{U.cta.titleB}</h2>
+              <p style={{ color: "rgba(214,232,243,0.75)", fontSize: 15, lineHeight: 1.7, marginBottom: 30, maxWidth: 480, margin: "0 auto 30px" }}>{U.cta.sub}</p>
               {!emailSent ? (
                 <form onSubmit={function (e) { e.preventDefault(); setEmailSent(true); }} style={{ display: "flex", gap: 10, maxWidth: 440, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
-                  <input type="email" required placeholder="you@email.com" style={{ flex: "1 1 220px", padding: "14px 22px", borderRadius: 999, border: "1.5px solid rgba(197,223,240,0.3)", fontFamily: T.sans, fontSize: 14, outline: "none", background: "rgba(255,255,255,0.08)", color: T.white }} />
-                  <button type="submit" style={{ background: T.aurora, color: T.white, border: "none", padding: "14px 30px", borderRadius: 999, fontFamily: T.sans, fontWeight: 600, fontSize: 14.5, cursor: "pointer", boxShadow: "0 6px 20px rgba(43,168,125,0.35)" }}>Subscribe</button>
+                  <input type="email" required placeholder={U.cta.placeholder} style={{ flex: "1 1 220px", padding: "14px 22px", borderRadius: 999, border: "1.5px solid rgba(197,223,240,0.3)", fontFamily: T.sans, fontSize: 14, outline: "none", background: "rgba(255,255,255,0.08)", color: T.white }} />
+                  <button type="submit" style={{ background: T.aurora, color: T.white, border: "none", padding: "14px 30px", borderRadius: 999, fontFamily: T.sans, fontWeight: 600, fontSize: 14.5, cursor: "pointer", boxShadow: "0 6px 20px rgba(43,168,125,0.35)" }}>{U.cta.subscribe}</button>
                 </form>
               ) : (
-                <div style={{ display: "inline-block", padding: "14px 28px", borderRadius: 999, background: "rgba(43,168,125,0.15)", border: "1px solid rgba(92,201,160,0.35)", fontFamily: T.mono, fontSize: 13, color: T.auroraLight }}>{"\u2713"} You are in. Welcome to the long game.</div>
+                <div style={{ display: "inline-block", padding: "14px 28px", borderRadius: 999, background: "rgba(43,168,125,0.15)", border: "1px solid rgba(92,201,160,0.35)", fontFamily: T.mono, fontSize: 13, color: T.auroraLight }}>{U.cta.done}</div>
               )}
               <div style={{ marginTop: 26 }}>
-                <PillBtn primary big onClick={scrollCalc} style={{ background: T.white, color: T.deep, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>Calculate my lifespan</PillBtn>
+                <PillBtn primary big onClick={scrollCalc} style={{ background: T.white, color: T.deep, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>{U.cta.btn}</PillBtn>
               </div>
             </div>
           </div>
@@ -1387,27 +1476,28 @@ export default function App() {
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", gap: 32 }}>
             <div>
               <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 16, color: T.deep, marginBottom: 10 }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
-              <p style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.7, maxWidth: 280 }}>Research-backed tools to build, manage, and preserve your healthspan. Educational content only \u2014 not medical advice.</p>
+              <p style={{ fontSize: 12.5, color: T.sub, lineHeight: 1.7, maxWidth: 280 }}>{U.footer.desc}</p>
             </div>
             <div>
-              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>Explore</div>
-              {[["The 7 pillars", "pillars"], ["Calculator", "calculator"], ["30-day protocol", "protocol"], ["Biomarkers", "biomarkers"]].map(function (l) { return <div key={l[1]} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>{U.footer.explore}</div>
+              {[[U.footer.lPillars, "pillars"], [U.footer.lCalc, "calculator"], [U.footer.lProtocol, "protocol"], [U.footer.lBio, "biomarkers"]].map(function (l) { return <div key={l[1]} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
             </div>
             <div>
-              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>Knowledge</div>
-              {[["Myths debunked", "faq"], ["Evidence wall", "faq"], ["FAQ", "faq"]].map(function (l, i) { return <div key={i} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>{U.footer.knowledge}</div>
+              {[[U.footer.lMyths, "faq"], [U.footer.lEvid, "faq"], [U.footer.lFaq, "faq"]].map(function (l, i) { return <div key={i} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
             </div>
             <div>
-              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>Sources</div>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>{U.footer.sources}</div>
               {["JAMA Internal Med", "PLOS Medicine", "NEJM", "SLEEP Journal"].map(function (j) { return <div key={j} style={{ fontSize: 13, color: T.sub, marginBottom: 9, fontWeight: 500 }}>{j}</div>; })}
             </div>
           </div>
           <div style={{ borderTop: "1px solid " + T.glassBorder, marginTop: 44, padding: "20px 0", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 10 }}>
-            <span style={{ fontSize: 11, color: T.dim }}>The information on this site is for educational purposes and is not a substitute for professional medical advice, diagnosis, or treatment.</span>
-            <span style={{ fontSize: 10.5, color: T.dim, fontFamily: T.mono }}>Peer-reviewed science &middot; {new Date().getFullYear()}</span>
+            <span style={{ fontSize: 11, color: T.dim }}>{U.footer.disclaimer}</span>
+            <span style={{ fontSize: 10.5, color: T.dim, fontFamily: T.mono }}>{U.footer.science} &middot; {new Date().getFullYear()}</span>
           </div>
         </div>
       </footer>
     </>
+    </LangCtx.Provider>
   );
 }
