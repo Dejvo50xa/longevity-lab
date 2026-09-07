@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
 import { UI, CS, BIOUI } from "./content-cs.js";
+import { Analytics } from '@vercel/analytics/react';
 
 var LangCtx = createContext("cs");
 function useUI() { var l = useContext(LangCtx); return { lang: l, U: UI[l], cs: l === "cs" }; }
