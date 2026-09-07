@@ -270,7 +270,7 @@ function calcLifespan(inp, bio) {
     { key: "cold", label: "Cold", years: (inp.coldExposure / 10) * 2, color: "#8AC4D0" },
     { key: "supplements", label: "Supplements", years: (inp.supplementScore / 10) * 2, color: "#89CFF0" },
     { key: "smoking", label: "Smoking", years: inp.smokingStatus === 0 ? 0 : inp.smokingStatus === 1 ? -5 : -10, color: T.warm },
-    { key: "alcohol", label: "Alcohol", years: (inp.alcoholScore >= 4 && inp.alcoholScore <= 6) ? 1 : inp.alcoholScore > 7 ? -3 : 0, color: T.warmLight },
+    { key: "alcohol", label: "Alcohol", years: -Math.pow(Math.min(Math.max(inp.alcoholScore - 2, 0), 8) / 8, 1.3) * 5, color: T.warmLight },
   ];
   // ── metodika ──
   // 1) zisky klesaji s vekem (Fadnes 2022: +10,7 roku ve 20 letech, vyrazne min v 60)
