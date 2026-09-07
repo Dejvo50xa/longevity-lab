@@ -255,30 +255,42 @@ var PILLARS = [
 
 /* ══════════════ CALCULATOR ══════════════ */
 var BASE_LIFE = { male: 76, female: 81 };
-var DEFAULT_INPUTS = { age: 30, sex: "male", exerciseDays: 3, exerciseIntensity: 5, saunaSessions: 1, dietScore: 5, sleepScore: 5, supplementScore: 3, socialScore: 5, coldExposure: 2, smokingStatus: 0, alcoholScore: 5 };
+var DEFAULT_INPUTS = { age: 30, sex: "male", exerciseDays: 3, exerciseIntensity: 5, saunaSessions: 1, dietScore: 5, sleepScore: 5, supplementScore: 3, socialScore: 5, coldExposure: 2, smokingStatus: 0, alcoholScore: 5, yearsQuit: 5 };
 
 function r1(n) { return Math.round(n * 10) / 10; }
 
+/* prumerne chovani populace — zaklad 76/81 uz ho zahrnuje, proto se roky
+   pocitaji PROTI nemu, ne od nuly (jinak by prumerny clovek dostal roky navic) */
+var AVG = { exVol: 8 / 70, diet: 4.5, sleep: 5, social: 5, cold: 0, supp: 2.5 };
+function dr(x, max) { return max * (1 - Math.exp(-3 * x)); }
+function smokingYears(inp) {
+  if (inp.smokingStatus === 0) return 0;
+  if (inp.smokingStatus === 2) return -10;
+  var q = (inp.yearsQuit === undefined || inp.yearsQuit === null) ? 5 : inp.yearsQuit;
+  return -10 * Math.exp(-q / 9); // riziko odeznivá, vetsina do 15-20 let
+}
+
 function calcLifespan(inp, bio) {
   var base = BASE_LIFE[inp.sex];
+  var exVol = Math.min((inp.exerciseDays * inp.exerciseIntensity) / 70, 1);
+  var saunaN = Math.min(inp.saunaSessions / 5, 1);
   var raw = [
-    { key: "exercise", label: "Exercise", years: (inp.exerciseDays / 7) * (inp.exerciseIntensity / 10) * 4.5, color: T.accent },
-    { key: "nutrition", label: "Nutrition", years: (inp.dietScore / 10) * 13, color: "#2E8B6A" },
-    { key: "social", label: "Social", years: (inp.socialScore / 10) * 7, color: T.mid },
-    { key: "sleep", label: "Sleep", years: (inp.sleepScore / 10) * 5, color: "#6BA3C7" },
-    { key: "sauna", label: "Sauna", years: Math.min(inp.saunaSessions / 4, 1) * 3, color: T.auroraLight },
-    { key: "cold", label: "Cold", years: (inp.coldExposure / 10) * 2, color: "#8AC4D0" },
-    { key: "supplements", label: "Supplements", years: (inp.supplementScore / 10) * 2, color: "#89CFF0" },
-    { key: "smoking", label: "Smoking", years: inp.smokingStatus === 0 ? 0 : inp.smokingStatus === 1 ? -5 : -10, color: T.warm },
+    { key: "exercise", label: "Exercise", years: dr(exVol, 4.5) - dr(AVG.exVol, 4.5), color: T.accent },
+    { key: "nutrition", label: "Nutrition", years: (inp.dietScore - AVG.diet) * 1.55, color: "#2E8B6A" },
+    { key: "social", label: "Social", years: (inp.socialScore - AVG.social) * 0.70, color: T.mid },
+    { key: "sleep", label: "Sleep", years: (inp.sleepScore - AVG.sleep) * 0.50, color: "#6BA3C7" },
+    { key: "sauna", label: "Sauna", years: dr(saunaN, 3), color: T.auroraLight },
+    { key: "cold", label: "Cold", years: (inp.coldExposure - AVG.cold) * 0.11, color: "#8AC4D0" },
+    { key: "supplements", label: "Supplements", years: (inp.supplementScore - AVG.supp) * 0.13, color: "#89CFF0" },
+    { key: "smoking", label: "Smoking", years: smokingYears(inp), color: T.warm },
     { key: "alcohol", label: "Alcohol", years: -Math.pow(Math.min(Math.max(inp.alcoholScore - 2, 0), 8) / 8, 1.3) * 5, color: T.warmLight },
-  ];
-  // ── metodika ──
+  ];  // ── metodika ──
   // 1) zisky klesaji s vekem (Fadnes 2022: +10,7 roku ve 20 letech, vyrazne min v 60)
   var ageF = Math.min(Math.max(1 - (inp.age - 20) * 0.0135, 0.22), 1);
   // 2) pilire se prekryvaji (spolecne mechanismy) -> klesajici vynosy, ne proste secteni
   var posRaw = 0, negRaw = 0;
   raw.forEach(function (f) { if (f.years >= 0) posRaw += f.years; else negRaw += f.years; });
-  var CAP = 24;
+  var CAP = 18;
   var posAdj = CAP * (1 - Math.exp(-(posRaw * ageF) / CAP));
   var kPos = posRaw > 0 ? posAdj / posRaw : 0;
   var kNeg = 0.65 + 0.35 * ageF;
@@ -1259,6 +1271,7 @@ export default function App() {
               <div style={{ height: 1, background: T.glassBorder, margin: "4px 0 20px" }} />
               <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.risk}</div>
               <Sl label={U.calc.smoking} value={inputs.smokingStatus} onChange={function (v) { set("smokingStatus", v); }} min={0} max={2} dv={lb(LB.smoking, inputs.smokingStatus)} />
+              {inputs.smokingStatus === 1 && <Sl label={U.calc.yearsQuit} value={inputs.yearsQuit} onChange={function (v) { set("yearsQuit", v); }} min={0} max={30} />}
               <Sl label={U.calc.alcohol} value={inputs.alcoholScore} onChange={function (v) { set("alcoholScore", v); }} dv={lb(LB.alcohol, inputs.alcoholScore)} />
 
               <div style={{ height: 1, background: T.glassBorder, margin: "18px 0 14px" }} />
