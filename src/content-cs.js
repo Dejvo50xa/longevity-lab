@@ -15,8 +15,8 @@ export var UI = {
       lead: "From your first habit to a lifelong protocol, Longevity Lab gives you simple, research-backed tools to build, manage, and preserve your healthspan over time.",
       ctaCalc: "Calculate my lifespan", ctaScience: "Explore the science",
       trust: [
-        { t: "Peer-reviewed", s: "6 meta-analyses. 308K+ participants." },
-        { t: "+36.5 years", s: "Maximum gainable across 7 pillars." },
+        { t: "Research-based", s: "Large cohort studies and meta-analyses." },
+        { t: "An estimate", s: "Compared with average, with an uncertainty range." },
         { t: "Personalized", s: "An avatar that mirrors your habits." },
         { t: "Actionable", s: "30-day protocol. Zero guesswork." },
       ],
@@ -57,7 +57,7 @@ export var UI = {
     faq: { eyebrow: "FAQ", title: "Frequently asked questions" },
     cta: {
       titleA: "Start, build, and preserve", titleB: "your healthspan",
-      sub: "New longevity research every month, distilled into actionable insights. No hype, no price calls — frameworks and clear thinking.",
+      sub: "A couple of minutes and a clear view of which habits matter most for you. Educational estimate only — not medical advice.",
       placeholder: "you@email.com", subscribe: "Subscribe", done: "✓ You are in. Welcome to the long game.", btn: "Calculate my lifespan",
     },
     footer: {
@@ -81,8 +81,8 @@ export var UI = {
       lead: "Od prvního návyku po celoživotní protokol — Longevity Lab ti dává jednoduché nástroje podložené výzkumem, jak si budovat a udržet roky ve zdraví.",
       ctaCalc: "Spočítat mou délku života", ctaScience: "Prozkoumat vědu",
       trust: [
-        { t: "Recenzované studie", s: "6 metaanalýz. Přes 308 tisíc účastníků." },
-        { t: "+36,5 roku", s: "Maximum k získání ze 7 pilířů." },
+        { t: "Podložené výzkumem", s: "Velké kohortové studie a metaanalýzy." },
+        { t: "Odhad, ne předpověď", s: "Porovnání s průměrem, s pásmem nejistoty." },
         { t: "Osobní", s: "Avatar, který zrcadlí tvoje návyky." },
         { t: "Prakticky", s: "30denní protokol. Žádné hádání." },
       ],
@@ -123,7 +123,7 @@ export var UI = {
     faq: { eyebrow: "FAQ", title: "Časté otázky" },
     cta: {
       titleA: "Začni budovat a chraň si", titleB: "roky ve zdraví",
-      sub: "Každý měsíc nový výzkum dlouhověkosti, přeložený do použitelných kroků. Žádný humbuk — jen rámce a jasné myšlení.",
+      sub: "Pár minut a jasný přehled, které návyky jsou pro tebe nejdůležitější. Jde o vzdělávací odhad, ne o lékařskou radu.",
       placeholder: "ty@email.cz", subscribe: "Odebírat", done: "✓ Jsi v tom. Vítej v dlouhé hře.", btn: "Spočítat mou délku života",
     },
     footer: {
@@ -161,7 +161,7 @@ export var CS = {
   ],
 
   solution: [
-    { title: "Pochop vědu", body: "Sedm pilířů, každý podložený recenzovanými metaanalýzami s více než 308 tisíci účastníky. Klikni na pilíř a dostaneš rozbor až na molekulární úroveň — bez humbuku a historek.", cta: "Prozkoumat pilíře →" },
+    { title: "Pochop vědu", body: "Sedm pilířů, každý opřený o velké studie a metaanalýzy (jen o sociálních vazbách jich jedna shrnula 148 studií s 308 849 lidmi). Klikni na pilíř a dostaneš rozbor až na molekulární úroveň — bez humbuku a historek.", cta: "Prozkoumat pilíře →" },
     { title: "Uvidíš sám sebe", body: "Tvůj osobní avatar reaguje na každý návyk v reálném čase — postava, držení těla, vitalita — a odhaduje tvůj biologický věk proti kalendářnímu.", cta: "Ukázat avatara →" },
     { title: "Jednej podle protokolu", body: "30denní startovací protokol převádí výzkum na jeden malý krok denně. Stavěný na vytrvalost, ne na dokonalost — jediná proměnná, která na desetiletém horizontu rozhoduje.", cta: "Spustit protokol →" },
   ],

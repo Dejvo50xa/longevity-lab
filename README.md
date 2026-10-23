@@ -1,16 +1,32 @@
-# React + Vite
+# Longevity Lab
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Česko-anglický vzdělávací web o zdravém stárnutí: kalkulačka „kolik let zdraví ti dávají tvoje návyky",
+sedm pilířů (pohyb, strava, vztahy, spánek, sauna, chlad, doplňky) s hloubkovými rozbory, 30denní protokol,
+biomarkery, slovník a FAQ.
 
-Currently, two official plugins are available:
+Živě: https://longevity-lab-wheat.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Kalkulačka dává **odhad proti průměrné populaci s pásmem nejistoty**, ne předpověď. Web je vzdělávací,
+nenahrazuje lékařskou radu.
 
-## React Compiler
+## Spuštění
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+npm run dev      # vývoj na http://localhost:5173
+npm run build    # produkční build do dist/
+npm run lint
+```
 
-## Expanding the ESLint configuration
+## Kde co je
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- `src/App.jsx` — celý web: barvy (`T`), anglický obsah, model kalkulačky (`calcLifespan`), komponenty.
+- `src/content-cs.js` — české texty a anglické texty rozhraní (objekt `UI`).
+- `src/Avatar2D.jsx` — avatar, který reaguje na posuvníky.
+- `public/og.png` — náhled pro sdílení (1200×630).
+
+## Pravidla pro obsah
+
+- Čísla na webu musí mít zdroj. Co nejde doložit, formuluj opatrně („odhad", „spojeno s").
+- Efekty pilířů se **nesčítají** — model počítá s klesajícími výnosy, takže na webu nesčítej maxima.
+- Barvy textu drž v kontrastu aspoň 4,5 : 1 (WCAG AA); tokeny `sub`, `dim`, `accent`, `aurora`, `warm` už to splňují.

@@ -422,13 +422,13 @@ export default function Avatar2D({ inputs, gained, height }) {
 
       <div style={{ display: "flex", justifyContent: "center", gap: 18 }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#8EAABB", fontFamily: "'JetBrains Mono',monospace" }}>KALENDÁŘNÍ</div>
+          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#4F7085", fontFamily: "'JetBrains Mono',monospace" }}>KALENDÁŘNÍ</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: "#1A3A52" }}>{inputs.age}</div>
         </div>
         <div style={{ width: 1, background: "rgba(140,170,200,0.25)" }} />
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#8EAABB", fontFamily: "'JetBrains Mono',monospace" }}>BIOLOGICKÝ</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: p.bioAge <= inputs.age ? "#2BA87D" : "#D95843" }}>{Math.round(p.bioAge)}</div>
+          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#4F7085", fontFamily: "'JetBrains Mono',monospace" }}>BIOLOGICKÝ</div>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: p.bioAge <= inputs.age ? "#1B7D58" : "#C2412E" }}>{Math.round(p.bioAge)}</div>
         </div>
       </div>
     </div>

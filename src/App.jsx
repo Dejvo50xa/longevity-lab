@@ -13,10 +13,10 @@ import Avatar2D from "./Avatar2D.jsx";
 var T = {
   bg: "#F5F8FA", bgAlt: "#EDF2F7", glass: "rgba(255,255,255,0.72)",
   glassBorder: "rgba(140,170,200,0.22)", glassBorderHover: "rgba(100,150,200,0.35)",
-  deep: "#0C2D48", mid: "#1B4965", accent: "#3B8CC4", accentSoft: "#5FA8D3",
-  ice: "#C5DFF0", faint: "#E8F1F8", aurora: "#2BA87D", auroraLight: "#5CC9A0",
-  warm: "#D95843", warmLight: "#E89B4C", text: "#1A3A52", sub: "#5C8199",
-  dim: "#8EAABB", white: "#FFFFFF",
+  deep: "#0C2D48", mid: "#1B4965", accent: "#296DA0", accentSoft: "#5FA8D3",
+  ice: "#C5DFF0", faint: "#E8F1F8", aurora: "#1B7D58", auroraLight: "#5CC9A0",
+  warm: "#C2412E", warmLight: "#E89B4C", text: "#1A3A52", sub: "#4A6F87",
+  dim: "#4F7085", white: "#FFFFFF",
   shadow: "0 8px 32px rgba(12,45,72,0.07), 0 1.5px 4px rgba(12,45,72,0.04)",
   shadowLg: "0 20px 60px rgba(12,45,72,0.10), 0 2px 8px rgba(12,45,72,0.05)",
   mono: "'SF Mono','JetBrains Mono','Fira Code',monospace",
@@ -729,7 +729,7 @@ function Sl({ min, max, step, value, onChange, label, dv }) {
       <span style={{ fontSize: 13, fontWeight: 600, color: T.text, fontFamily: T.sans }}>{label}</span>
       <span style={{ fontSize: 13, fontWeight: 700, color: T.accent, fontFamily: T.mono, minWidth: 56, textAlign: "right" }}>{dv !== undefined ? dv : value}</span>
     </div>
-    <input type="range" min={min} max={max} step={step} value={value} onChange={function (e) { onChange(Number(e.target.value)); }} style={{ width: "100%", height: 5, appearance: "none", WebkitAppearance: "none", borderRadius: 99, outline: "none", cursor: "pointer", background: "linear-gradient(to right," + T.accent + " 0%," + T.accent + " " + pct + "%," + T.faint + " " + pct + "%," + T.faint + " 100%)" }} />
+    <input type="range" aria-label={label} aria-valuetext={String(dv !== undefined ? dv : value)} min={min} max={max} step={step} value={value} onChange={function (e) { onChange(Number(e.target.value)); }} style={{ width: "100%", height: 5, appearance: "none", WebkitAppearance: "none", borderRadius: 99, outline: "none", cursor: "pointer", background: "linear-gradient(to right," + T.accent + " 0%," + T.accent + " " + pct + "%," + T.faint + " " + pct + "%," + T.faint + " 100%)" }} />
   </div>);
 }
 
@@ -739,7 +739,7 @@ function PillarCard({ p, index, onOpen }) {
   var o = (u.cs && CS.pillars[p.id]) || {};
   var _r = useReveal(0.1), ref = _r[0], vis = _r[1];
   return (
-    <div ref={ref} onClick={function () { onOpen(p.id); }} style={{ padding: "24px 22px", background: T.glass, backdropFilter: T.blur, WebkitBackdropFilter: T.blur, border: "1px solid " + T.glassBorder, borderRadius: T.radius, boxShadow: T.shadow, cursor: "pointer", transition: "all 0.4s cubic-bezier(.4,0,.2,1) " + (index * 0.05) + "s, transform 0.2s ease", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(24px)", position: "relative", overflow: "hidden" }}
+    <div ref={ref} {...pressable(function () { onOpen(p.id); })} style={{ padding: "24px 22px", background: T.glass, backdropFilter: T.blur, WebkitBackdropFilter: T.blur, border: "1px solid " + T.glassBorder, borderRadius: T.radius, boxShadow: T.shadow, cursor: "pointer", transition: "all 0.4s cubic-bezier(.4,0,.2,1) " + (index * 0.05) + "s, transform 0.2s ease", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(24px)", position: "relative", overflow: "hidden" }}
       onMouseEnter={function (e) { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = T.shadowLg; e.currentTarget.style.borderColor = T.glassBorderHover; }}
       onMouseLeave={function (e) { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = T.shadow; e.currentTarget.style.borderColor = T.glassBorder; }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
@@ -762,25 +762,62 @@ function PillarCard({ p, index, onOpen }) {
 }
 
 /* ══════════════ DETAIL MODAL (scrollable overlay window) ══════════════ */
+/* ══════════════ DIALOG BEHAVIOUR ══════════════ */
+// Shared by both modals: locks page scroll, closes on Escape, moves focus into the
+// dialog, keeps Tab inside it and returns focus to the card that opened it.
+function useDialog(onClose) {
+  var panelRef = useRef(null), closeRef = useRef(null), closeFn = useRef(onClose);
+  closeFn.current = onClose;
+  useEffect(function () {
+    var opener = document.activeElement;
+    document.body.style.overflow = "hidden";
+    if (closeRef.current) closeRef.current.focus();
+    function onKey(e) {
+      if (e.key === "Escape") { closeFn.current(); return; }
+      if (e.key !== "Tab" || !panelRef.current) return;
+      var f = panelRef.current.querySelectorAll("button,a[href],input,[tabindex]:not([tabindex='-1'])");
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    document.addEventListener("keydown", onKey);
+    return function () {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+      if (opener && opener.focus) opener.focus();
+    };
+  }, []);
+  return { panelRef: panelRef, closeRef: closeRef };
+}
+
+// Makes a non-button element (a card) work like a button for keyboard and screen readers.
+function pressable(fn, label) {
+  return {
+    role: "button", tabIndex: 0, "aria-haspopup": "dialog", "aria-label": label, onClick: fn,
+    onKeyDown: function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); } },
+  };
+}
+
 function DetailModal({ pillarId, onClose }) {
   var u = useUI();
   var data = PILLAR_DETAILS[pillarId];
   var csd = (u.cs && CS.pillarDetails[pillarId]) || null;
   var secs = (csd && csd.sections) ? csd.sections : (data ? data.sections : []);
+  var dlg = useDialog(onClose);
   if (!data) return null;
-  useEffect(function () { document.body.style.overflow = "hidden"; return function () { document.body.style.overflow = ""; }; }, []);
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(12,45,72,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
-      <div onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 720, width: "100%", maxHeight: "88vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25), 0 0 0 1px rgba(140,170,200,0.15)", padding: 0 }}>
+      <div ref={dlg.panelRef} role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 720, width: "100%", maxHeight: "88vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25), 0 0 0 1px rgba(140,170,200,0.15)", padding: 0 }}>
         {/* header */}
         <div style={{ padding: "28px 36px 20px", borderBottom: "1px solid " + T.glassBorder, position: "sticky", top: 0, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderRadius: "22px 22px 0 0", zIndex: 2 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: data.color, marginBottom: 4 }}>{u.U.modal.deepDive}</div>
-              <h2 style={{ fontFamily: T.sans, fontSize: 24, fontWeight: 700, color: T.deep, letterSpacing: -0.5 }}>{(csd && csd.title) || data.title}</h2>
+              <h2 id="detail-title" style={{ fontFamily: T.sans, fontSize: 24, fontWeight: 700, color: T.deep, letterSpacing: -0.5 }}>{(csd && csd.title) || data.title}</h2>
             </div>
-            <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 12, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>&times;</button>
+            <button ref={dlg.closeRef} type="button" aria-label={u.cs ? "Zavřít" : "Close"} onClick={onClose} style={{ width: 44, height: 44, borderRadius: 12, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>&times;</button>
           </div>
         </div>
         {/* sections */}
@@ -823,7 +860,7 @@ var WHY_STATS = [
 ];
 
 var SOLUTION_CARDS = [
-  { icon: "\u{1F52C}", title: "Learn the science", body: "Seven pillars, each backed by peer-reviewed meta-analyses covering 308,000+ participants. Click any pillar for a molecular-level deep dive — no hype, no anecdotes.", link: "#pillars", cta: "Explore the pillars →" },
+  { icon: "\u{1F52C}", title: "Learn the science", body: "Seven pillars, each grounded in large studies and meta-analyses (the social-connection one alone pooled 148 studies and 308,849 people). Click any pillar for a molecular-level deep dive — no hype, no anecdotes.", link: "#pillars", cta: "Explore the pillars →" },
   { icon: "\u{1F9CD}", title: "See yourself in 3D", body: "Your personal avatar reacts to every habit in real time — body composition, posture, vitality — and estimates your biological vs. chronological age.", link: "#calculator", cta: "Meet your avatar →" },
   { icon: "\u{1F4C5}", title: "Act on a protocol", body: "A 30-day starter protocol turns the research into one small step per day. Built for consistency, not perfection — the only variable that matters at 10-year horizons.", link: "#protocol", cta: "Start the protocol →" },
 ];
@@ -1040,20 +1077,20 @@ function Faq({ q, a, light }) {
 /* ══════════════ BIOMARKER MODAL ══════════════ */
 function BiomarkerModal({ marker, onClose }) {
   var u = useUI();
+  var dlg = useDialog(onClose);
   if (!marker) return null;
   var c = (u.cs && CS.biomarkers[marker.name]) || {};
   var m = { name: c.name || marker.name, optimal: marker.optimal, freq: c.freq || marker.freq, what: c.what || marker.what, improve: c.improve || marker.improve, test: c.test || marker.test };
-  useEffect(function () { document.body.style.overflow = "hidden"; return function () { document.body.style.overflow = ""; }; }, []);
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(12,45,72,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
-      <div onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 620, width: "100%", maxHeight: "86vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25)", padding: "32px 36px 36px" }}>
+      <div ref={dlg.panelRef} role="dialog" aria-modal="true" aria-labelledby="bio-title" onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 620, width: "100%", maxHeight: "86vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25)", padding: "32px 36px 36px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
           <div>
             <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: T.accent, marginBottom: 4 }}>{u.U.bio.mTitle}</div>
-            <h2 style={{ fontFamily: T.sans, fontSize: 26, fontWeight: 700, color: T.deep, letterSpacing: -0.6 }}>{m.name}</h2>
+            <h2 id="bio-title" style={{ fontFamily: T.sans, fontSize: 26, fontWeight: 700, color: T.deep, letterSpacing: -0.6 }}>{m.name}</h2>
           </div>
-          <button onClick={onClose} style={{ width: 38, height: 38, borderRadius: 99, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, lineHeight: 1, flexShrink: 0 }}>&times;</button>
+          <button ref={dlg.closeRef} type="button" aria-label={u.cs ? "Zavřít" : "Close"} onClick={onClose} style={{ width: 44, height: 44, borderRadius: 99, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, lineHeight: 1, flexShrink: 0 }}>&times;</button>
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
           <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.aurora, background: "rgba(43,168,125,0.08)", border: "1px solid rgba(43,168,125,0.2)", borderRadius: 99, padding: "5px 14px" }}>{u.U.bio.mOptimal}: {m.optimal}</span>
@@ -1090,10 +1127,10 @@ function GlossarySection() {
         <SectionHead eyebrow={u.U.glos.eyebrow} title={u.U.glos.title} sub={u.U.glos.sub} />
         <div style={{ maxWidth: 420, margin: "0 auto 32px", position: "relative" }}>
           <span style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", color: T.dim, fontSize: 14 }}>{"\u{1F50D}"}</span>
-          <input value={q} onChange={function (e) { setQ(e.target.value); }} placeholder={u.U.glos.search.replace("{n}", GLOSSARY.length)} style={{ width: "100%", padding: "13px 20px 13px 46px", borderRadius: 999, border: "1.5px solid " + T.glassBorder, fontFamily: T.sans, fontSize: 14, outline: "none", background: T.white, color: T.deep }} />
+          <input type="search" aria-label={u.U.glos.search.replace("{n}", GLOSSARY.length)} value={q} onChange={function (e) { setQ(e.target.value); }} placeholder={u.U.glos.search.replace("{n}", GLOSSARY.length)} className="srch" style={{ width: "100%", padding: "13px 20px 13px 46px", borderRadius: 999, border: "1.5px solid " + T.glassBorder, fontFamily: T.sans, fontSize: 14, outline: "none", background: T.white, color: T.deep }} />
         </div>
         <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12 }}>
-          {filtered.map(function (g, i) { return (
+          {filtered.map(function (g) { return (
             <div key={g.key} className="liftcard" style={{ padding: "18px 20px", borderRadius: 16, background: T.white, border: "1px solid " + T.glassBorder }}>
               <div style={{ fontFamily: T.sans, fontSize: 14.5, fontWeight: 700, color: T.accent, marginBottom: 6 }}>{g.term}</div>
               <p style={{ fontSize: 12.5, lineHeight: 1.7, color: T.sub }}>{g.def}</p>
@@ -1108,13 +1145,22 @@ function GlossarySection() {
 /* ═══════════════════════════ MAIN APP ═══════════════════════════ */
 export default function App() {
   var _s = useState(DEFAULT_INPUTS), inputs = _s[0], setInputs = _s[1];
-  var _e = useState(false), emailSent = _e[0], setEmailSent = _e[1];
   var _m = useState(null), modal = _m[0], setModal = _m[1];
   var _bm = useState(null), bioModal = _bm[0], setBioModal = _bm[1];
-  var _lg = useState(function () { try { return localStorage.getItem("ll-lang") || "cs"; } catch (e) { return "cs"; } }), lang = _lg[0], setLang = _lg[1];
-  useEffect(function () { try { localStorage.setItem("ll-lang", lang); } catch (e) {} }, [lang]);
+  var _lg = useState(function () { try { return localStorage.getItem("ll-lang") || "cs"; } catch { return "cs"; } }), lang = _lg[0], setLang = _lg[1];
+  useEffect(function () {
+    try { localStorage.setItem("ll-lang", lang); } catch { /* storage unavailable */ }
+    document.documentElement.lang = lang;
+    document.title = lang === "cs" ? "Longevity Lab — kolik let zdraví ti dávají tvoje návyky" : "Longevity Lab — how many healthy years your habits add";
+  }, [lang]);
   var U = UI[lang], cs = lang === "cs";
   var calcRef = useRef(null);
+  // Deep links such as /#calculator: the section only exists after React renders, so jump once mounted.
+  useEffect(function () {
+    var id = window.location.hash.slice(1);
+    var el = id && document.getElementById(id);
+    if (el) el.scrollIntoView();
+  }, []);
   var set = useCallback(function (k, v) { setInputs(function (p) { var n = {}; for (var x in p) n[x] = p[x]; n[k] = v; return n; }); }, []);
   var LB = cs ? CS.lbl : LBL;
   var BU = BIOUI[lang];
@@ -1132,17 +1178,18 @@ export default function App() {
   return (
     <LangCtx.Provider value={lang}>
     <>
-      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navlinks{display:none!important}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n@keyframes floaty{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(1.06)}100%{transform:translate(12px,-10px) scale(0.98)}}\n@keyframes marq{to{transform:translateX(-50%)}}\n.marq{display:flex;gap:56px;width:max-content;animation:marq 26s linear infinite;align-items:center}\n.marq:hover{animation-play-state:paused}\n.gradtxt{background:linear-gradient(95deg,#3B8CC4 10%,#2BA87D 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.navlink{position:relative}\n.navlink::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;border-radius:2px;background:#3B8CC4;transition:width 0.25s ease}\n.navlink:hover::after{width:100%}\n.liftcard{transition:transform 0.3s cubic-bezier(.4,0,.2,1),box-shadow 0.3s ease,border-color 0.3s ease}\n.liftcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(12,45,72,0.12),0 2px 8px rgba(12,45,72,0.06)!important;border-color:rgba(100,150,200,0.4)!important}\n      "}</style>
+      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\ninput[type=range]:focus-visible,.srch:focus-visible,input[type=number]:focus-visible,a:focus-visible,button:focus-visible,[role=button]:focus-visible{outline:3px solid " + T.deep + ";outline-offset:3px;border-radius:6px}\n.skip{position:absolute;left:12px;top:-60px;z-index:300;background:" + T.deep + ";color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;text-decoration:none}.skip:focus{top:12px}\n.navlink,.flink{text-decoration:none}\nsection[id],#top{scroll-margin-top:72px}\n[role=button]{-webkit-tap-highlight-color:transparent}\n@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navwrap{flex-wrap:wrap;row-gap:6px!important;padding:10px 16px!important}.navlinks{order:3;width:100%;overflow-x:auto;gap:20px!important;padding:4px 2px 2px;scrollbar-width:none}.navlinks a{white-space:nowrap;padding:6px 0}section[id],#top{scroll-margin-top:110px}.hero{padding-top:128px!important;padding-bottom:40px}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n@keyframes floaty{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(1.06)}100%{transform:translate(12px,-10px) scale(0.98)}}\n@keyframes marq{to{transform:translateX(-50%)}}\n.marq{display:flex;gap:56px;width:max-content;animation:marq 26s linear infinite;align-items:center}\n.marq:hover{animation-play-state:paused}\n.gradtxt{background:linear-gradient(95deg,#3B8CC4 10%,#2BA87D 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.navlink{position:relative}\n.navlink::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;border-radius:2px;background:#3B8CC4;transition:width 0.25s ease}\n.navlink:hover::after{width:100%}\n.liftcard{transition:transform 0.3s cubic-bezier(.4,0,.2,1),box-shadow 0.3s ease,border-color 0.3s ease}\n.liftcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(12,45,72,0.12),0 2px 8px rgba(12,45,72,0.06)!important;border-color:rgba(100,150,200,0.4)!important}\n      "}</style>
 
       {modal && <DetailModal pillarId={modal} onClose={function () { setModal(null); }} />}
       {bioModal && <BiomarkerModal marker={bioModal} onClose={function () { setBioModal(null); }} />}
 
+      <a className="skip" href="#top">{cs ? "Přeskočit na obsah" : "Skip to content"}</a>
       {/* NAV — fixed glass bar */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(245,248,250,0.82)", backdropFilter: T.blur, WebkitBackdropFilter: T.blur, borderBottom: "1px solid " + T.glassBorder }}>
-        <div className="mx" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 28px" }}>
-          <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15.5, color: T.deep, cursor: "pointer" }} onClick={function () { window.scrollTo({ top: 0, behavior: "smooth" }); }}><span style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</div>
+        <div className="mx navwrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 28px" }}>
+          <a href="#top" className="navlink" style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15.5, color: T.deep }}><span aria-hidden="true" style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</a>
           <div className="navlinks" style={{ display: "flex", gap: 26, alignItems: "center" }}>
-            {[[U.nav.science, "pillars"], [U.nav.protocol, "protocol"], [U.nav.biomarkers, "biomarkers"], [U.nav.glossary, "glossary"], [U.nav.faq, "faq"]].map(function (l) { return <span key={l[1]} className="navlink" onClick={function () { goTo(l[1]); }} style={{ fontSize: 13.5, fontWeight: 600, color: T.mid, cursor: "pointer" }}>{l[0]}</span>; })}
+            {[[U.nav.science, "pillars"], [U.nav.protocol, "protocol"], [U.nav.biomarkers, "biomarkers"], [U.nav.glossary, "glossary"], [U.nav.faq, "faq"]].map(function (l) { return <a key={l[1]} href={"#" + l[1]} className="navlink" style={{ fontSize: 13.5, fontWeight: 600, color: T.mid }}>{l[0]}</a>; })}
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={{ display: "flex", background: "rgba(255,255,255,0.55)", border: "1px solid " + T.glassBorder, borderRadius: 99, overflow: "hidden" }}>
@@ -1156,8 +1203,9 @@ export default function App() {
         <ScrollProgress />
       </nav>
 
+      <main id="top">
       {/* HERO */}
-      <section style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", paddingTop: 80, background: "linear-gradient(175deg," + T.faint + " 0%," + T.bg + " 40%,rgba(43,168,125,0.03) 100%)" }}>
+      <section className="hero" style={{ position: "relative", minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden", paddingTop: 80, background: "linear-gradient(175deg," + T.faint + " 0%," + T.bg + " 40%,rgba(43,168,125,0.03) 100%)" }}>
         <FrostParticles />
         <div style={{ position: "relative", zIndex: 1, textAlign: "center", maxWidth: 820, padding: "0 28px" }}>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 20px", borderRadius: 99, background: T.glass, border: "1px solid " + T.glassBorder, marginBottom: 30, backdropFilter: T.blurLight }}>
@@ -1224,7 +1272,7 @@ export default function App() {
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: T.faint, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, marginBottom: 18 }}>{c.icon}</div>
                   <h3 style={{ fontFamily: T.sans, fontSize: 18, fontWeight: 700, color: T.deep, letterSpacing: -0.4, marginBottom: 10 }}>{cs && CS.solution[i] ? CS.solution[i].title : c.title}</h3>
                   <p style={{ fontSize: 13.5, lineHeight: 1.75, color: T.sub, flex: 1, marginBottom: 16 }}>{cs && CS.solution[i] ? CS.solution[i].body : c.body}</p>
-                  <span onClick={function () { goTo(c.link.slice(1)); }} style={{ fontSize: 13, color: T.accent, fontWeight: 600, cursor: "pointer" }}>{cs && CS.solution[i] ? CS.solution[i].cta : c.cta}</span>
+                  <a href={c.link} className="flink" style={{ fontSize: 13, color: T.accent, fontWeight: 600 }}>{cs && CS.solution[i] ? CS.solution[i].cta : c.cta}</a>
                 </div>
               </Reveal>); })}
           </div>
@@ -1286,7 +1334,7 @@ export default function App() {
                     return (
                       <div key={f[0]} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 9 }}>
                         <span style={{ flex: 1, fontSize: 12.5, color: T.text, fontWeight: 500 }}>{f[1]}</span>
-                        <input type="number" step="any" value={bio[f[0]]} placeholder={f[3]} onChange={function (e) { setB(f[0], e.target.value); }}
+                        <input type="number" step="any" inputMode="decimal" aria-label={f[1] + " (" + f[2] + ")"} value={bio[f[0]]} placeholder={f[3]} onChange={function (e) { setB(f[0], e.target.value); }}
                           style={{ width: 78, padding: "7px 10px", borderRadius: 8, border: "1.5px solid " + T.glassBorder, background: T.white, color: T.deep, fontFamily: T.mono, fontSize: 13, textAlign: "right" }} />
                         <span style={{ width: 64, fontSize: 10.5, color: T.dim, fontFamily: T.mono }}>{f[2]}</span>
                       </div>
@@ -1376,7 +1424,7 @@ export default function App() {
           <div className="pg" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
             {BIOMARKERS.map(function (b, i) { return (
               <Reveal key={i} delay={(i % 3) * 0.1} style={{ height: "100%" }}>
-                <div onClick={function () { setBioModal(b); }} style={{ padding: "22px 24px", borderRadius: T.radius, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(140,170,200,0.2)", cursor: "pointer", transition: "all 0.3s ease", height: "100%" }}
+                <div {...pressable(function () { setBioModal(b); })} style={{ padding: "22px 24px", borderRadius: T.radius, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(140,170,200,0.2)", cursor: "pointer", transition: "all 0.3s ease", height: "100%" }}
                   onMouseEnter={function (e) { e.currentTarget.style.background = "rgba(255,255,255,0.09)"; e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.borderColor = "rgba(92,201,160,0.4)"; }}
                   onMouseLeave={function (e) { e.currentTarget.style.background = "rgba(255,255,255,0.05)"; e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.borderColor = "rgba(140,170,200,0.2)"; }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
@@ -1467,14 +1515,6 @@ export default function App() {
             <div style={{ position: "relative" }}>
               <h2 style={{ fontFamily: T.sans, fontSize: "clamp(26px,4.5vw,44px)", fontWeight: 700, color: T.white, letterSpacing: -1.2, lineHeight: 1.12, marginBottom: 14 }}>{U.cta.titleA}<br />{U.cta.titleB}</h2>
               <p style={{ color: "rgba(214,232,243,0.75)", fontSize: 15, lineHeight: 1.7, marginBottom: 30, maxWidth: 480, margin: "0 auto 30px" }}>{U.cta.sub}</p>
-              {!emailSent ? (
-                <form onSubmit={function (e) { e.preventDefault(); setEmailSent(true); }} style={{ display: "flex", gap: 10, maxWidth: 440, margin: "0 auto", flexWrap: "wrap", justifyContent: "center" }}>
-                  <input type="email" required placeholder={U.cta.placeholder} style={{ flex: "1 1 220px", padding: "14px 22px", borderRadius: 999, border: "1.5px solid rgba(197,223,240,0.3)", fontFamily: T.sans, fontSize: 14, outline: "none", background: "rgba(255,255,255,0.08)", color: T.white }} />
-                  <button type="submit" style={{ background: T.aurora, color: T.white, border: "none", padding: "14px 30px", borderRadius: 999, fontFamily: T.sans, fontWeight: 600, fontSize: 14.5, cursor: "pointer", boxShadow: "0 6px 20px rgba(43,168,125,0.35)" }}>{U.cta.subscribe}</button>
-                </form>
-              ) : (
-                <div style={{ display: "inline-block", padding: "14px 28px", borderRadius: 999, background: "rgba(43,168,125,0.15)", border: "1px solid rgba(92,201,160,0.35)", fontFamily: T.mono, fontSize: 13, color: T.auroraLight }}>{U.cta.done}</div>
-              )}
               <div style={{ marginTop: 26 }}>
                 <PillBtn primary big onClick={scrollCalc} style={{ background: T.white, color: T.deep, boxShadow: "0 8px 24px rgba(0,0,0,0.2)" }}>{U.cta.btn}</PillBtn>
               </div>
@@ -1482,6 +1522,8 @@ export default function App() {
           </div>
         </div>
       </section>
+
+      </main>
 
       {/* FOOTER */}
       <footer style={{ borderTop: "1px solid " + T.glassBorder, background: T.white }}>
@@ -1493,11 +1535,11 @@ export default function App() {
             </div>
             <div>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>{U.footer.explore}</div>
-              {[[U.footer.lPillars, "pillars"], [U.footer.lCalc, "calculator"], [U.footer.lProtocol, "protocol"], [U.footer.lBio, "biomarkers"]].map(function (l) { return <div key={l[1]} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
+              {[[U.footer.lPillars, "pillars"], [U.footer.lCalc, "calculator"], [U.footer.lProtocol, "protocol"], [U.footer.lBio, "biomarkers"]].map(function (l) { return <a key={l[1]} href={"#" + l[1]} className="flink" style={{ display: "block", fontSize: 13, color: T.sub, marginBottom: 9, fontWeight: 500 }}>{l[0]}</a>; })}
             </div>
             <div>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>{U.footer.knowledge}</div>
-              {[[U.footer.lMyths, "faq"], [U.footer.lEvid, "faq"], [U.footer.lFaq, "faq"]].map(function (l, i) { return <div key={i} onClick={function () { goTo(l[1]); }} style={{ fontSize: 13, color: T.sub, marginBottom: 9, cursor: "pointer", fontWeight: 500 }}>{l[0]}</div>; })}
+              {[[U.footer.lMyths, "faq"], [U.footer.lEvid, "faq"], [U.footer.lFaq, "faq"]].map(function (l, i) { return <a key={i} href={"#" + l[1]} className="flink" style={{ display: "block", fontSize: 13, color: T.sub, marginBottom: 9, fontWeight: 500 }}>{l[0]}</a>; })}
             </div>
             <div>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, textTransform: "uppercase", marginBottom: 14 }}>{U.footer.sources}</div>
