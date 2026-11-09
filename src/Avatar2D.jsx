@@ -60,7 +60,7 @@ function targetParams(inputs, gained) {
 
 /* plynulé dojíždění všech hodnot (lerp po snímcích) */
 function useSmooth(target) {
-  var _s = useState(target), val = _s[0], setVal = _s[1];
+  var [val, setVal] = useState(target);
   var ref = useRef(target);
   useEffect(function () {
     var raf;
@@ -83,15 +83,12 @@ function useSmooth(target) {
 }
 
 export default function Avatar2D({ inputs, gained, height }) {
-  var sig = [inputs.age, inputs.sex, inputs.exerciseDays, inputs.exerciseIntensity, inputs.saunaSessions,
-    inputs.dietScore, inputs.sleepScore, inputs.supplementScore, inputs.socialScore,
-    inputs.coldExposure, inputs.smokingStatus, inputs.alcoholScore, gained].join("|");
-  var target = useMemo(function () { return targetParams(inputs, gained || 0); }, [sig]);
+  var target = useMemo(function () { return targetParams(inputs, gained || 0); }, [inputs, gained]);
   var p = useSmooth(target);
   var uid = useMemo(function () { return "av" + Math.random().toString(36).slice(2, 7); }, []);
 
   /* mrkání */
-  var _b = useState(false), blink = _b[0], setBlink = _b[1];
+  var [blink, setBlink] = useState(false);
   useEffect(function () {
     var to, iv = setInterval(function () {
       setBlink(true); to = setTimeout(function () { setBlink(false); }, 130);
