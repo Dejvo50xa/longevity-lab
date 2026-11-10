@@ -63,3 +63,21 @@ export function calcLifespan(inp, bio) {
   return { base: base, total: r1(total), low: r1(total - band), high: r1(total + band),
            factors: factors, bioAdj: r1(bioAdj), bioUsed: bioUsed, ageF: ageF };
 }
+
+/* ══════════════ SAVED ANSWERS ══════════════ */
+// Allowed range of every calculator input (same limits as the sliders).
+export var INPUT_RANGE = { age: [18, 90], exerciseDays: [0, 7], exerciseIntensity: [1, 10], saunaSessions: [0, 7], dietScore: [0, 10], sleepScore: [0, 10], supplementScore: [0, 10], socialScore: [0, 10], coldExposure: [0, 10], smokingStatus: [0, 2], alcoholScore: [0, 10], yearsQuit: [0, 30] };
+
+// Turns anything read from storage into safe inputs: unknown keys are dropped,
+// missing or out-of-range values fall back to the defaults.
+export function sanitizeInputs(saved) {
+  var out = {};
+  for (var k in DEFAULT_INPUTS) out[k] = DEFAULT_INPUTS[k];
+  if (!saved || typeof saved !== "object") return out;
+  if (saved.sex === "male" || saved.sex === "female") out.sex = saved.sex;
+  for (var key in INPUT_RANGE) {
+    var v = saved[key], r = INPUT_RANGE[key];
+    if (typeof v === "number" && isFinite(v) && v >= r[0] && v <= r[1]) out[key] = v;
+  }
+  return out;
+}

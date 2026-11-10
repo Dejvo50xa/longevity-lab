@@ -4,7 +4,7 @@ import { UI, CS, BIOUI } from "./content-cs.js";
 var LangCtx = createContext("cs");
 function useUI() { var l = useContext(LangCtx); return { lang: l, U: UI[l], cs: l === "cs" }; }
 import Avatar2D from "./Avatar2D.jsx";
-import { DEFAULT_INPUTS, calcLifespan, r1 } from "./model.js";
+import { DEFAULT_INPUTS, calcLifespan, r1, sanitizeInputs } from "./model.js";
 
 /* ═══════════════════════════════════════════════════════════════
    LONGEVITY LAB v5 — Lifelike Avatar + A4 Deep-Dives
@@ -202,6 +202,13 @@ function paragraphs(text) {
     if (prev && /(\bal|\be\.g|\bi\.e|\bvs|\bcca|\bnapř|\btzv|\btj|\bkol|\bDr|\bSt|\bapprox|\d)\.$/.test(prev)) sentences[sentences.length - 1] = prev + " " + p;
     else sentences.push(p);
   });
+  // a few sentences are long semicolon-separated lists: break those at the semicolons
+  var pieces = [];
+  sentences.forEach(function (sn) {
+    if (sn.length <= 700) { pieces.push(sn); return; }
+    sn.split(/(?<=;)\s+/).forEach(function (part) { pieces.push(part); });
+  });
+  sentences = pieces;
   var out = [], cur = "";
   sentences.forEach(function (sn) {
     if (cur && (cur.length + sn.length > 520)) { out.push(cur); cur = sn; } else cur = cur ? cur + " " + sn : sn;
@@ -231,12 +238,12 @@ function DetailModal({ pillarId, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(12,45,72,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
-      <div ref={dlg.panelRef} role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 720, width: "100%", maxHeight: "88vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25), 0 0 0 1px rgba(140,170,200,0.15)", padding: 0 }}>
+      <div ref={dlg.panelRef} role="dialog" aria-modal="true" aria-labelledby="detail-title" onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", textAlign: "left", background: T.white, borderRadius: 22, maxWidth: 720, width: "100%", maxHeight: "88vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25), 0 0 0 1px rgba(140,170,200,0.15)", padding: 0 }}>
         {/* header */}
         <div style={{ padding: "28px 36px 20px", borderBottom: "1px solid " + T.glassBorder, position: "sticky", top: 0, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderRadius: "22px 22px 0 0", zIndex: 2 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: color, marginBottom: 4 }}>{u.U.modal.deepDive}</div>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "color-mix(in srgb, " + color + " 35%, " + T.deep + ")", marginBottom: 4 }}>{u.U.modal.deepDive}</div>
               <h2 id="detail-title" style={{ fontFamily: T.sans, fontSize: 24, fontWeight: 700, color: T.deep, letterSpacing: -0.5 }}>{title}</h2>
             </div>
             <button ref={dlg.closeRef} type="button" aria-label={u.cs ? "Zavřít" : "Close"} onClick={onClose} style={{ width: 44, height: 44, borderRadius: 12, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>&times;</button>
@@ -508,7 +515,7 @@ function BiomarkerModal({ marker, onClose }) {
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={onClose}>
       <div style={{ position: "absolute", inset: 0, background: "rgba(12,45,72,0.45)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }} />
-      <div ref={dlg.panelRef} role="dialog" aria-modal="true" aria-labelledby="bio-title" onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", background: T.white, borderRadius: 22, maxWidth: 620, width: "100%", maxHeight: "86vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25)", padding: "32px 36px 36px" }}>
+      <div ref={dlg.panelRef} role="dialog" aria-modal="true" aria-labelledby="bio-title" onClick={function (e) { e.stopPropagation(); }} style={{ position: "relative", textAlign: "left", background: T.white, borderRadius: 22, maxWidth: 620, width: "100%", maxHeight: "86vh", overflow: "auto", boxShadow: "0 40px 100px rgba(12,45,72,0.25)", padding: "32px 36px 36px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
           <div>
             <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: T.accent, marginBottom: 4 }}>{u.U.bio.mTitle}</div>
@@ -568,7 +575,12 @@ function GlossarySection() {
 
 /* ═══════════════════════════ MAIN APP ═══════════════════════════ */
 export default function App() {
-  var [inputs, setInputs] = useState(DEFAULT_INPUTS);
+  // Calculator answers are remembered in this browser only (never sent anywhere).
+  var [inputs, setInputs] = useState(function () {
+    try { return sanitizeInputs(JSON.parse(localStorage.getItem("ll-inputs"))); } catch { return sanitizeInputs(null); }
+  });
+  useEffect(function () { try { localStorage.setItem("ll-inputs", JSON.stringify(inputs)); } catch { /* storage unavailable */ } }, [inputs]);
+  var isDefault = JSON.stringify(inputs) === JSON.stringify(DEFAULT_INPUTS);
   var [modal, setModal] = useState(null);
   var [bioModal, setBioModal] = useState(null);
   var [lang, setLang] = useState(function () { try { return localStorage.getItem("ll-lang") || "cs"; } catch { return "cs"; } });
@@ -602,7 +614,7 @@ export default function App() {
   return (
     <LangCtx.Provider value={lang}>
     <>
-      <style>{"\n@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\ninput[type=range]:focus-visible,.srch:focus-visible,input[type=number]:focus-visible,a:focus-visible,button:focus-visible,[role=button]:focus-visible{outline:3px solid " + T.deep + ";outline-offset:3px;border-radius:6px}\n.skip{position:absolute;left:12px;top:-60px;z-index:300;background:" + T.deep + ";color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;text-decoration:none}.skip:focus{top:12px}\n.navlink,.flink{text-decoration:none}\nsection[id],#top{scroll-margin-top:72px}\n[role=button]{-webkit-tap-highlight-color:transparent}\n@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navwrap{flex-wrap:wrap;row-gap:6px!important;padding:10px 16px!important}.navlinks{order:3;width:100%;overflow-x:auto;gap:20px!important;padding:4px 2px 2px;scrollbar-width:none}.navlinks a{white-space:nowrap;padding:6px 0}section[id],#top{scroll-margin-top:110px}.hero{padding-top:128px!important;padding-bottom:40px}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n@keyframes floaty{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(1.06)}100%{transform:translate(12px,-10px) scale(0.98)}}\n@keyframes marq{to{transform:translateX(-50%)}}\n.marq{display:flex;gap:56px;width:max-content;animation:marq 26s linear infinite;align-items:center}\n.marq:hover{animation-play-state:paused}\n.gradtxt{background:linear-gradient(95deg,#3B8CC4 10%,#2BA87D 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.navlink{position:relative}\n.navlink::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;border-radius:2px;background:#3B8CC4;transition:width 0.25s ease}\n.navlink:hover::after{width:100%}\n.liftcard{transition:transform 0.3s cubic-bezier(.4,0,.2,1),box-shadow 0.3s ease,border-color 0.3s ease}\n.liftcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(12,45,72,0.12),0 2px 8px rgba(12,45,72,0.06)!important;border-color:rgba(100,150,200,0.4)!important}\n      "}</style>
+      <style>{"\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\nhtml{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}\nbody{background:" + T.bg + ";color:" + T.text + ";font-family:" + T.sans + ";overflow-x:hidden}\n::selection{background:" + T.ice + ";color:" + T.deep + "}\ninput[type=range]{-webkit-appearance:none;appearance:none}\ninput[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer;box-shadow:0 2px 8px rgba(12,45,72,0.15);transition:transform 0.15s}\ninput[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}\ninput[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:" + T.white + ";border:2px solid " + T.accent + ";cursor:pointer}\ninput[type=range]:focus{outline:none}\ninput[type=range]:focus-visible,.srch:focus-visible,input[type=number]:focus-visible,a:focus-visible,button:focus-visible,[role=button]:focus-visible{outline:3px solid " + T.deep + ";outline-offset:3px;border-radius:6px}\n.skip{position:absolute;left:12px;top:-60px;z-index:300;background:" + T.deep + ";color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;text-decoration:none}.skip:focus{top:12px}\n.navlink,.flink{text-decoration:none}\nsection[id],#top{scroll-margin-top:72px}\n[role=button]{-webkit-tap-highlight-color:transparent}\n@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important;scroll-behavior:auto!important}}\n.mx{max-width:1120px;margin:0 auto;padding:0 28px}\n@media(max-width:840px){.cg{grid-template-columns:1fr!important}.er{grid-template-columns:1fr!important}.hs{flex-direction:column;gap:4px!important}.pg{grid-template-columns:1fr!important}.navwrap{flex-wrap:wrap;row-gap:6px!important;padding:10px 16px!important}.navlinks{order:3;width:100%;overflow-x:auto;gap:20px!important;padding:4px 2px 2px;scrollbar-width:none}.navlinks a{white-space:nowrap;padding:6px 0}section[id],#top{scroll-margin-top:110px}.hero{padding-top:128px!important;padding-bottom:40px}}\n@media(max-width:560px){.hs>div{border-left:none!important;border-top:1px solid rgba(140,170,200,0.22)}.hs>div:first-child{border-top:none}}\n@keyframes gp{0%,100%{box-shadow:0 0 0 0 rgba(59,140,196,0.12)}50%{box-shadow:0 0 0 14px rgba(59,140,196,0)}}\n@keyframes floaty{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-18px,14px) scale(1.06)}100%{transform:translate(12px,-10px) scale(0.98)}}\n@keyframes marq{to{transform:translateX(-50%)}}\n.marq{display:flex;gap:56px;width:max-content;animation:marq 26s linear infinite;align-items:center}\n.marq:hover{animation-play-state:paused}\n.gradtxt{background:linear-gradient(95deg,#3B8CC4 10%,#2BA87D 90%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}\n.navlink{position:relative}\n.navlink::after{content:'';position:absolute;left:0;bottom:-4px;width:0;height:2px;border-radius:2px;background:#3B8CC4;transition:width 0.25s ease}\n.navlink:hover::after{width:100%}\n.liftcard{transition:transform 0.3s cubic-bezier(.4,0,.2,1),box-shadow 0.3s ease,border-color 0.3s ease}\n.liftcard:hover{transform:translateY(-5px);box-shadow:0 20px 60px rgba(12,45,72,0.12),0 2px 8px rgba(12,45,72,0.06)!important;border-color:rgba(100,150,200,0.4)!important}\n      "}</style>
 
       {modal && <DetailModal pillarId={modal} onClose={function () { setModal(null); }} />}
       {bioModal && <BiomarkerModal marker={bioModal} onClose={function () { setBioModal(null); }} />}
@@ -724,7 +736,10 @@ export default function App() {
           <div className="cg" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, alignItems: "start" }}>
             {/* INPUTS */}
             <div style={gc(32)}>
-              <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.basics}</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 }}>
+                <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, color: T.dim, marginBottom: 16, letterSpacing: 2 }}>{U.calc.basics}</div>
+                <button type="button" disabled={isDefault} onClick={function () { setInputs(sanitizeInputs(null)); setBio({ apob: "", hba1c: "", crp: "", bp: "", vo2: "" }); }} style={{ background: "none", border: "none", padding: "6px 0", fontFamily: T.sans, fontSize: 12.5, fontWeight: 600, color: isDefault ? T.dim : T.accent, cursor: isDefault ? "default" : "pointer", textDecoration: isDefault ? "none" : "underline", opacity: isDefault ? 0.75 : 1 }}>{cs ? "Začít znovu" : "Start over"}</button>
+              </div>
               <Sl label={U.calc.age} value={inputs.age} onChange={function (v) { set("age", v); }} min={18} max={90} />
               <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
                 {["male", "female"].map(function (s) { return (<button key={s} onClick={function () { set("sex", s); }} style={{ flex: 1, padding: "10px 0", borderRadius: 10, fontSize: 13, fontFamily: T.sans, fontWeight: 600, cursor: "pointer", transition: "all 0.2s", background: inputs.sex === s ? T.accent : T.glass, color: inputs.sex === s ? T.white : T.sub, border: "1.5px solid " + (inputs.sex === s ? T.accent : T.glassBorder), boxShadow: inputs.sex === s ? "0 2px 8px rgba(59,140,196,0.2)" : "none" }}>{s === "male" ? U.calc.male : U.calc.female}</button>); })}

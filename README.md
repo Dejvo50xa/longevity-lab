@@ -16,11 +16,14 @@ npm install
 npm run dev      # vývoj na http://localhost:5173
 npm run build    # produkční build do dist/
 npm run lint
+npm test         # testy modelu kalkulačky
 ```
 
 ## Kde co je
 
-- `src/App.jsx` — celý web: barvy (`T`), anglický obsah, model kalkulačky (`calcLifespan`), komponenty.
+- `src/App.jsx` — web: barvy (`T`), anglický obsah, komponenty.
+- `src/model.js` — model kalkulačky (`calcLifespan`) a kontrola uložených odpovědí; testy v `src/model.test.js`.
+- `src/details-en.js`, `src/details-cs.js` — dlouhé rozbory pilířů; načítají se až po otevření pilíře.
 - `src/content-cs.js` — české texty a anglické texty rozhraní (objekt `UI`).
 - `src/Avatar2D.jsx` — avatar, který reaguje na posuvníky.
 - `public/og.png` — náhled pro sdílení (1200×630).
