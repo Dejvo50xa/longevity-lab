@@ -31,13 +31,13 @@ var PILLAR_COLOR = {"exercise": "#3B8CC4", "nutrition": "#2E8B6A", "social": "#1
 
 /* ══════════════ PILLAR CARD DATA ══════════════ */
 var PILLARS = [
-  { id: "exercise", icon: "\u{1F3CB}\uFE0F", title: "Exercise", dose: "150+ min/wk moderate or 75 min vigorous", minY: 3.4, maxY: 4.5, study: "Moore et al., PLOS Medicine 2012", desc: "The single most powerful longevity intervention. A brisk 22-minute daily walk adds 3+ years.", insight: "Even 15 min/day beats sedentary by 3 years" },
-  { id: "nutrition", icon: "\u{1F96C}", title: "Nutrition", dose: "Plant-rich, Mediterranean-style", minY: 10, maxY: 13, study: "Fadnes et al., PLOS Medicine 2022", desc: "Switching from a Western diet to an optimised diet at age 20 adds 10.7 years.", insight: "Largest single factor \u2014 diet shapes destiny" },
-  { id: "social", icon: "\u{1F91D}", title: "Social Connection", dose: "Strong relationships and community", minY: 3, maxY: 7, study: "Holt-Lunstad et al., PLOS Medicine 2010", desc: "Loneliness is as deadly as smoking 15 cigarettes a day. Strong social bonds increase survival by 50%.", insight: "Loneliness matches smoking in mortality risk" },
-  { id: "sleep", icon: "\u{1F319}", title: "Sleep Regularity", dose: "7\u20138 hrs with consistent timing", minY: 2, maxY: 5, study: "Windred et al., SLEEP 2024", desc: "Sleep irregularity increases all-cause mortality by 20\u201348%. Consistency matters as much as total hours.", insight: "Consistency matters more than duration" },
-  { id: "sauna", icon: "\u{1F9D6}", title: "Sauna Bathing", dose: "4\u20137 sessions per week, 15\u201320 min", minY: 2, maxY: 3, study: "Laukkanen et al., JAMA Internal Med 2015", desc: "4\u20137 sauna sessions per week cut cardiovascular mortality by 50% and all-cause mortality by 40%.", insight: "50% lower CVD death at 4\u20137x per week" },
-  { id: "cold", icon: "\u2744\uFE0F", title: "Cold Exposure", dose: "Cold showers, ice baths, winter swimming", minY: 1, maxY: 2, study: "\u0160r\u00e1mek et al., Eur J Appl Physiol 2000", desc: "Cold exposure activates brown fat, reduces inflammation, boosts norepinephrine 200-300%.", insight: "Activates brown fat and cuts inflammation" },
-  { id: "supplements", icon: "\u{1F48A}", title: "Supplements", dose: "D3, Omega-3, Magnesium (evidence-based)", minY: 0.5, maxY: 2, study: "Manson et al., VITAL Trial, NEJM 2019", desc: "Omega-3 reduced heart attacks by 28%. Target real deficiencies, skip the hype.", insight: "Target real deficiencies, skip the hype" },
+  { id: "exercise", icon: "\u{1F3CB}\uFE0F", title: "Exercise", dose: "150+ min/wk moderate or 75 min vigorous", minY: 3.4, maxY: 4.5, study: "Moore et al., PLOS Medicine 2012", desc: "150–299 minutes of brisk walking a week was associated with 3.4 more years of life after 40; the most active group gained 4.5.", insight: "Even 15 min a day was linked to 3 extra years (Wen et al., Lancet 2011)", url: "https://doi.org/10.1371/journal.pmed.1001335", est: false },
+  { id: "nutrition", icon: "\u{1F96C}", title: "Nutrition", dose: "Plant-rich, Mediterranean-style", minY: 10, maxY: 13, study: "Fadnes et al., PLOS Medicine 2022", desc: "A modelling study estimates that switching from a typical Western diet to an optimised one at age 20 adds 10.7 years for women and 13.0 for men.", insight: "Biggest estimated gain — and it shrinks the later you start", url: "https://doi.org/10.1371/journal.pmed.1003889", est: false },
+  { id: "social", icon: "\u{1F91D}", title: "Social Connection", dose: "Strong relationships and community", minY: 3, maxY: 7, study: "Holt-Lunstad et al., PLOS Medicine 2010", desc: "Across 148 studies, people with stronger social relationships had a 50% higher likelihood of survival — an effect the authors call comparable with quitting smoking.", insight: "An effect comparable with quitting smoking", url: "https://doi.org/10.1371/journal.pmed.1000316", est: true },
+  { id: "sleep", icon: "\u{1F319}", title: "Sleep Regularity", dose: "7\u20138 hrs with consistent timing", minY: 2, maxY: 5, study: "Windred et al., SLEEP 2024", desc: "In 60,977 UK adults, the most regular sleepers had a 20–48% lower risk of death than the least regular. Regularity predicted mortality better than sleep duration.", insight: "Regularity predicted risk better than duration", url: "https://doi.org/10.1093/sleep/zsad253", est: true },
+  { id: "sauna", icon: "\u{1F9D6}", title: "Sauna Bathing", dose: "4\u20137 sessions per week, 15\u201320 min", minY: 2, maxY: 3, study: "Laukkanen et al., JAMA Internal Med 2015", desc: "In 2,315 middle-aged Finnish men, 4–7 sauna sessions a week was associated with 50% lower cardiovascular mortality and 40% lower all-cause mortality than one session.", insight: "An association in one Finnish cohort, not proof of cause", url: "https://doi.org/10.1001/jamainternmed.2014.8187", est: true },
+  { id: "cold", icon: "\u2744\uFE0F", title: "Cold Exposure", dose: "Cold showers, ice baths, winter swimming", minY: 1, maxY: 2, study: "\u0160r\u00e1mek et al., Eur J Appl Physiol 2000", desc: "One hour in 14 °C water raised noradrenaline by 530% and metabolic rate by 350% in a small study of young men. No study yet shows that cold exposure adds years of life.", insight: "Strong short-term response; long-term benefit unproven", url: "https://doi.org/10.1007/s004210050065", est: true },
+  { id: "supplements", icon: "\u{1F48A}", title: "Supplements", dose: "D3, Omega-3, Magnesium (evidence-based)", minY: 0.5, maxY: 2, study: "Manson et al., VITAL Trial, NEJM 2019", desc: "In the VITAL trial (25,871 adults), omega-3 did not lower major cardiovascular events overall; heart attacks, a secondary outcome, were 28% lower.", insight: "Target real deficiencies, skip the hype", url: "https://doi.org/10.1056/NEJMoa1811403", est: true },
 ];
 
 /* ══════════════ HOOKS ══════════════ */
@@ -137,7 +137,7 @@ function PillarCard({ p, index, onOpen }) {
       onMouseLeave={function (e) { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = T.shadow; e.currentTarget.style.borderColor = T.glassBorder; }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
         <span style={{ fontSize: 24 }}>{p.icon}</span>
-        <div style={{ fontFamily: T.mono, fontSize: 17, fontWeight: 700, color: T.aurora }}>+{p.minY}&ndash;{p.maxY}<span style={{ fontSize: 10, fontWeight: 500, color: T.sub, marginLeft: 2 }}>{u.U.yrs}</span></div>
+        <div style={{ fontFamily: T.mono, fontSize: 17, fontWeight: 700, color: T.aurora }}>+{p.minY}&ndash;{p.maxY}<span style={{ fontSize: 10, fontWeight: 500, color: T.sub, marginLeft: 2 }}>{u.U.yrs}</span><span style={{ display: "block", fontFamily: T.sans, fontSize: 10, fontWeight: 500, color: T.sub, textAlign: "right", marginTop: 2 }}>{p.est ? (u.cs ? "odhad webu" : "site estimate") : (u.cs ? "ze studie" : "from the study")}</span></div>
       </div>
       <h3 style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.deep, marginBottom: 2, letterSpacing: -0.3 }}>{o.title || p.title}</h3>
       <div style={{ fontSize: 11, color: T.accent, fontFamily: T.mono, marginBottom: 10, letterSpacing: -0.2 }}>{o.dose || p.dose}</div>
@@ -233,6 +233,7 @@ function DetailModal({ pillarId, onClose }) {
   var data = cur && cur.detail;
   var secs = data ? data.sections : [];
   var title = data ? data.title : ((u.cs && CS.pillars[pillarId] && CS.pillars[pillarId].title) || (PILLARS.filter(function (p) { return p.id === pillarId; })[0] || {}).title);
+  var study = PILLARS.filter(function (p) { return p.id === pillarId; })[0];
   var dlg = useDialog(onClose);
   if (!color) return null;
   return (
@@ -245,6 +246,7 @@ function DetailModal({ pillarId, onClose }) {
             <div>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, textTransform: "uppercase", color: "color-mix(in srgb, " + color + " 35%, " + T.deep + ")", marginBottom: 4 }}>{u.U.modal.deepDive}</div>
               <h2 id="detail-title" style={{ fontFamily: T.sans, fontSize: 24, fontWeight: 700, color: T.deep, letterSpacing: -0.5 }}>{title}</h2>
+              {study && <a href={study.url} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", marginTop: 6, fontSize: 12.5, fontWeight: 600, color: T.accent }}>{u.cs ? "Hlavní studie: " : "Main study: "}{(u.cs && CS.pillars[pillarId] && CS.pillars[pillarId].study) || study.study} ↗</a>}
             </div>
             <button ref={dlg.closeRef} type="button" aria-label={u.cs ? "Zavřít" : "Close"} onClick={onClose} style={{ width: 44, height: 44, borderRadius: 12, border: "1px solid " + T.glassBorder, background: T.faint, cursor: "pointer", fontSize: 20, color: T.sub, display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}>&times;</button>
           </div>
@@ -272,12 +274,14 @@ function DetailModal({ pillarId, onClose }) {
 
 /* ══════════════ EVIDENCE ══════════════ */
 var EVIDENCE = [
-  { year: "2022", title: "Estimating impact of food choices on life expectancy", a: "Fadnes et al.", j: "PLOS Medicine", f: "+10.7 yrs from optimal diet at age 20", url: "https://doi.org/10.1371/journal.pmed.1003889" },
-  { year: "2015", title: "Sauna bathing and fatal cardiovascular events", a: "Laukkanen et al.", j: "JAMA Internal Medicine", f: "4\u20137x/wk: 50% lower CVD mortality", url: "https://doi.org/10.1001/jamainternmed.2014.8187" },
-  { year: "2012", title: "Leisure time physical activity and mortality", a: "Moore et al.", j: "PLOS Medicine", f: "+4.5 yrs from 150 min/wk exercise", url: "https://doi.org/10.1371/journal.pmed.1001335" },
-  { year: "2024", title: "Sleep regularity and all-cause mortality", a: "Windred et al.", j: "SLEEP", f: "Irregular sleep: 20\u201348% higher death risk", url: "https://doi.org/10.1093/sleep/zsad253" },
-  { year: "2010", title: "Social relationships and mortality risk", a: "Holt-Lunstad et al.", j: "PLOS Medicine", f: "Strong ties: 50% survival increase", url: "https://doi.org/10.1371/journal.pmed.1000316" },
-  { year: "2019", title: "Vitamin D and Omega-3 supplementation", a: "Manson et al.", j: "New England J of Medicine", f: "Omega-3: 28% fewer heart attacks", url: "https://doi.org/10.1056/NEJMoa1811403" },
+  { year: "2022", title: "Estimating impact of food choices on life expectancy", a: "Fadnes et al.", j: "PLOS Medicine", f: "Model: +10.7 (women) / +13.0 (men) yrs from age 20", url: "https://doi.org/10.1371/journal.pmed.1003889" },
+  { year: "2015", title: "Sauna bathing and fatal cardiovascular events", a: "Laukkanen et al.", j: "JAMA Internal Medicine", f: "4\u20137x/wk: 50% lower CVD mortality (Finnish men)", url: "https://doi.org/10.1001/jamainternmed.2014.8187" },
+  { year: "2012", title: "Leisure time physical activity and mortality", a: "Moore et al.", j: "PLOS Medicine", f: "+3.4 yrs at 150\u2013299 min/wk, up to +4.5", url: "https://doi.org/10.1371/journal.pmed.1001335" },
+  { year: "2024", title: "Sleep regularity and all-cause mortality", a: "Windred et al.", j: "SLEEP", f: "Most regular sleepers: 20\u201348% lower death risk", url: "https://doi.org/10.1093/sleep/zsad253" },
+  { year: "2010", title: "Social relationships and mortality risk", a: "Holt-Lunstad et al.", j: "PLOS Medicine", f: "Stronger ties: 50% higher likelihood of survival", url: "https://doi.org/10.1371/journal.pmed.1000316" },
+  { year: "2019", title: "Vitamin D and Omega-3 supplementation", a: "Manson et al.", j: "New England J of Medicine", f: "No drop in major events; 28% fewer heart attacks", url: "https://doi.org/10.1056/NEJMoa1811403" },
+  { year: "2011", title: "Minimum amount of physical activity for reduced mortality", a: "Wen et al.", j: "The Lancet", f: "15 min/day: 14% lower mortality, +3 yrs", url: "https://doi.org/10.1016/S0140-6736(11)60749-6" },
+  { year: "2000", title: "Human physiological responses to immersion into water of different temperatures", a: "\u0160r\u00e1mek et al.", j: "Eur J Appl Physiol", f: "14 \u00b0C water: noradrenaline +530%", url: "https://doi.org/10.1007/s004210050065" },
 ];
 
 var LBL = { intensity: ["", "Light walk", "", "", "Moderate", "", "", "Vigorous", "", "", "Elite"], cold: ["None", "", "Occasional", "", "", "Regular", "", "", "", "", "Daily"], diet: ["Fast food", "", "", "", "Average", "", "", "", "Plant-rich", "", "Optimal"], sleep: ["Chaotic", "", "", "", "Irregular", "", "", "", "Consistent", "", "Perfect"], supps: ["None", "", "", "Basics", "", "", "", "Targeted", "", "", "Optimised"], social: ["Isolated", "", "", "", "Some", "", "", "", "Strong", "", "Thriving"], smoking: ["Never", "Former", "Current"], alcohol: ["None", "", "", "Light", "", "Moderate", "", "", "Heavy", "", "Excessive"] };
@@ -619,9 +623,9 @@ export default function App() {
       {modal && <DetailModal pillarId={modal} onClose={function () { setModal(null); }} />}
       {bioModal && <BiomarkerModal marker={bioModal} onClose={function () { setBioModal(null); }} />}
 
-      <a className="skip" href="#top">{cs ? "Přeskočit na obsah" : "Skip to content"}</a>
       {/* NAV — fixed glass bar */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, background: "rgba(245,248,250,0.82)", backdropFilter: T.blur, WebkitBackdropFilter: T.blur, borderBottom: "1px solid " + T.glassBorder }}>
+        <a className="skip" href="#top">{cs ? "Přeskočit na obsah" : "Skip to content"}</a>
         <div className="mx navwrap" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "14px 28px" }}>
           <a href="#top" className="navlink" style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15.5, color: T.deep }}><span aria-hidden="true" style={{ color: T.aurora, fontFamily: T.mono }}>{"// "}</span>Longevity Lab</a>
           <div className="navlinks" style={{ display: "flex", gap: 26, alignItems: "center" }}>
@@ -670,7 +674,7 @@ export default function App() {
       <div style={{ padding: "20px 0", borderBottom: "1px solid " + T.glassBorder, background: T.white, overflow: "hidden", position: "relative" }}>
         <p style={{ textAlign: "center", fontFamily: T.mono, fontSize: 11, letterSpacing: 1.5, textTransform: "uppercase", color: T.dim, marginBottom: 10 }}>{cs ? "Studie, ze kterých vycházíme, vyšly v časopisech" : "The studies we cite were published in"}</p>
         <div className="marq" aria-hidden="true">
-          {[0, 1].map(function (rep) { return ["PLOS Medicine", "JAMA Internal Medicine", "New England Journal of Medicine", "SLEEP", "European Journal of Applied Physiology"].map(function (j) { return <span key={rep + j} style={{ fontFamily: T.sans, fontSize: 14, fontWeight: 700, color: "#8FA6B8", letterSpacing: 0.3, whiteSpace: "nowrap" }}>{j}</span>; }); })}
+          {[0, 1].map(function (rep) { return ["PLOS Medicine", "JAMA Internal Medicine", "New England Journal of Medicine", "SLEEP", "The Lancet", "European Journal of Applied Physiology"].map(function (j) { return <span key={rep + j} style={{ fontFamily: T.sans, fontSize: 14, fontWeight: 700, color: "#8FA6B8", letterSpacing: 0.3, whiteSpace: "nowrap" }}>{j}</span>; }); })}
         </div>
         <div style={{ position: "absolute", inset: 0, pointerEvents: "none", background: "linear-gradient(90deg," + T.white + " 0%,transparent 8%,transparent 92%," + T.white + " 100%)" }} />
       </div>

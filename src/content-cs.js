@@ -29,7 +29,7 @@ export var UI = {
       p2: "Healthspan was built differently. It compounds like capital: every workout, every consistent night of sleep, every shared meal is a deposit. The science below shows exactly where the interest rates are highest.",
     },
     solution: { eyebrow: "The approach", title: "Science is the answer. This is how you get there", sub: "A focused platform for people who want to build long-term health — not chase trends, not biohack blindly, not guess." },
-    pillars: { eyebrow: "The science", title: "Every pillar, covered", sub: "Seven habits with the strongest mortality evidence in the literature. Click any card to deep-dive into the biology, research, and practical protocols." },
+    pillars: { eyebrow: "The science", title: "Every pillar, covered", sub: "Seven habits with the strongest mortality evidence in the literature. Click any card to deep-dive into the biology, research, and practical protocols. Years marked \"from the study\" are taken from the cited paper; \"site estimate\" is our own rough guess, because the study reports risk, not years." },
     calc: {
       eyebrow: "Interactive calculator", titleA: "How long will ", titleEm: "you", titleB: " live?",
       sub: "Move the sliders. Your avatar, your biological age, and your estimate update in real time.",
@@ -95,7 +95,7 @@ export var UI = {
       p2: "Roky ve zdraví se ale budují jinak. Nabalují se jako úroky: každý trénink, každá pravidelná noc spánku, každé společné jídlo je vklad. Věda níže ukazuje, kde je úrok nejvyšší.",
     },
     solution: { eyebrow: "Přístup", title: "Odpovědí je věda. Tudy se k ní dostaneš", sub: "Web pro lidi, kteří chtějí budovat dlouhodobé zdraví — ne honit trendy, biohackovat naslepo nebo hádat." },
-    pillars: { eyebrow: "Věda", title: "Všech sedm pilířů", sub: "Sedm návyků s nejsilnějšími důkazy o vlivu na úmrtnost. Klikni na kartu a ponoř se do biologie, výzkumu a praktických postupů." },
+    pillars: { eyebrow: "Věda", title: "Všech sedm pilířů", sub: "Sedm návyků s nejsilnějšími důkazy o vlivu na úmrtnost. Klikni na kartu a ponoř se do biologie, výzkumu a praktických postupů. Roky označené „ze studie“ jsou převzaté z citované práce; „odhad webu“ je náš vlastní hrubý odhad, protože studie uvádí riziko, ne roky." },
     calc: {
       eyebrow: "Interaktivní kalkulačka", titleA: "Jak dlouho budeš ", titleEm: "ty", titleB: " žít?",
       sub: "Hýbej posuvníky. Avatar, biologický věk i odhad se přepočítávají v reálném čase.",
@@ -167,13 +167,13 @@ export var CS = {
   ],
 
   pillars: {
-    exercise: { title: "Pohyb", dose: "150+ min/týden střední nebo 75 min svižné", desc: "Nejsilnější jednotlivá intervence pro dlouhověkost. Svižná dvacetiminutová procházka denně přidá přes 3 roky.", insight: "I 15 minut denně poráží sezení o 3 roky", study: "Moore a kol., PLOS Medicine 2012" },
-    nutrition: { title: "Strava", dose: "Rostlinná, středomořského typu", desc: "Přechod ze západní stravy na optimální ve dvaceti letech přidá 10,7 roku.", insight: "Největší jednotlivý faktor — strava určuje osud", study: "Fadnes a kol., PLOS Medicine 2022" },
-    social: { title: "Sociální vazby", dose: "Pevné vztahy a komunita", desc: "Osamělost zabíjí jako 15 cigaret denně. Silné vazby zvyšují šanci na přežití o 50 %.", insight: "Osamělost se rizikem vyrovná kouření", study: "Holt-Lunstad a kol., PLOS Medicine 2010" },
-    sleep: { title: "Pravidelnost spánku", dose: "7–8 hodin ve stejný čas", desc: "Nepravidelný spánek zvyšuje celkovou úmrtnost o 20–48 %. Pravidelnost hraje roli stejně jako délka.", insight: "Pravidelnost je důležitější než délka", study: "Windred a kol., SLEEP 2024" },
-    sauna: { title: "Saunování", dose: "4–7× týdně, 15–20 minut", desc: "4–7 saun týdně snižuje kardiovaskulární úmrtnost o 50 % a celkovou o 40 %.", insight: "O 50 % nižší úmrtnost na srdce při 4–7× týdně", study: "Laukkanen a kol., JAMA Internal Med 2015" },
-    cold: { title: "Otužování", dose: "Studené sprchy, ledové koupele, zimní plavání", desc: "Chlad aktivuje hnědý tuk, tlumí zánět a zvedá noradrenalin o 200–300 %.", insight: "Aktivuje hnědý tuk a tlumí zánět", study: "Šrámek a kol., Eur J Appl Physiol 2000" },
-    supplements: { title: "Doplňky stravy", dose: "D3, omega-3, hořčík (podložené důkazy)", desc: "Omega-3 snížily počet infarktů o 28 %. Řeš skutečné deficity, humbuk vynech.", insight: "Doplň skutečné deficity, humbuk vynech", study: "Manson a kol., VITAL Trial, NEJM 2019" },
+    exercise: { title: "Pohyb", dose: "150+ min/týden střední nebo 75 min svižné", desc: "150–299 minut svižné chůze týdně bylo spojeno s 3,4 roku života navíc po čtyřicítce; nejaktivnější skupina získala 4,5 roku.", insight: "I 15 minut denně bylo spojeno se 3 roky navíc (Wen a kol., Lancet 2011)", study: "Moore a kol., PLOS Medicine 2012" },
+    nutrition: { title: "Strava", dose: "Rostlinná, středomořského typu", desc: "Modelová studie odhaduje, že přechod z typické západní stravy na optimální ve 20 letech přidá ženám 10,7 a mužům 13,0 roku.", insight: "Největší odhadovaný zisk — a čím později začneš, tím je menší", study: "Fadnes a kol., PLOS Medicine 2022" },
+    social: { title: "Sociální vazby", dose: "Pevné vztahy a komunita", desc: "Ve 148 studiích měli lidé se silnějšími vztahy o 50 % vyšší šanci na přežití — podle autorů je to účinek srovnatelný s tím, když člověk přestane kouřit.", insight: "Účinek srovnatelný s odvykáním kouření", study: "Holt-Lunstad a kol., PLOS Medicine 2010" },
+    sleep: { title: "Pravidelnost spánku", dose: "7–8 hodin ve stejný čas", desc: "U 60 977 dospělých z Británie měli lidé s nejpravidelnějším spánkem o 20–48 % nižší riziko úmrtí než ti s nejméně pravidelným. Pravidelnost předpovídala úmrtnost lépe než délka spánku.", insight: "Pravidelnost předpovídala riziko lépe než délka", study: "Windred a kol., SLEEP 2024" },
+    sauna: { title: "Saunování", dose: "4–7× týdně, 15–20 minut", desc: "U 2 315 finských mužů středního věku bylo saunování 4–7× týdně spojeno s o 50 % nižší kardiovaskulární a o 40 % nižší celkovou úmrtností než jednou týdně.", insight: "Souvislost z jedné finské studie, ne důkaz příčiny", study: "Laukkanen a kol., JAMA Internal Med 2015" },
+    cold: { title: "Otužování", dose: "Studené sprchy, ledové koupele, zimní plavání", desc: "Hodina ve vodě o 14 °C zvýšila v malé studii mladých mužů noradrenalin o 530 % a metabolismus o 350 %. Žádná studie zatím neukázala, že otužování přidává roky života.", insight: "Silná krátkodobá reakce; dlouhodobý přínos neprokázán", study: "Šrámek a kol., Eur J Appl Physiol 2000" },
+    supplements: { title: "Doplňky stravy", dose: "D3, omega-3, hořčík (podložené důkazy)", desc: "Ve studii VITAL (25 871 dospělých) omega-3 celkově nesnížily počet závažných kardiovaskulárních příhod; infarktů, které byly vedlejším ukazatelem, bylo o 28 % méně.", insight: "Doplň skutečné deficity, humbuk vynech", study: "Manson a kol., VITAL Trial, NEJM 2019" },
   },
 
   protocol: [
@@ -303,12 +303,14 @@ export var CS = {
   ],
 
   evidence: {
-    "2022": { title: "Odhad vlivu volby potravin na očekávanou délku života", f: "+10,7 roku z optimální stravy ve 20 letech" },
-    "2015": { title: "Saunování a fatální kardiovaskulární příhody", f: "4–7× týdně: o 50 % nižší kardiovaskulární úmrtnost" },
-    "2012": { title: "Pohybová aktivita ve volném čase a úmrtnost", f: "+4,5 roku ze 150 min pohybu týdně" },
-    "2024": { title: "Pravidelnost spánku a celková úmrtnost", f: "Nepravidelný spánek: o 20–48 % vyšší riziko úmrtí" },
-    "2010": { title: "Sociální vztahy a riziko úmrtí", f: "Silné vazby: o 50 % vyšší šance na přežití" },
-    "2019": { title: "Suplementace vitaminem D a omega-3", f: "Omega-3: o 28 % méně infarktů" },
+    "2022": { title: "Odhad vlivu volby potravin na očekávanou délku života", f: "Model: +10,7 (ženy) / +13,0 (muži) roku od 20 let" },
+    "2015": { title: "Saunování a fatální kardiovaskulární příhody", f: "4–7× týdně: o 50 % nižší KV úmrtnost (finští muži)" },
+    "2012": { title: "Pohybová aktivita ve volném čase a úmrtnost", f: "+3,4 roku při 150–299 min týdně, nejvýš +4,5" },
+    "2024": { title: "Pravidelnost spánku a celková úmrtnost", f: "Nejpravidelnější spáči: o 20–48 % nižší riziko úmrtí" },
+    "2010": { title: "Sociální vztahy a riziko úmrtí", f: "Silnější vazby: o 50 % vyšší šance na přežití" },
+    "2019": { title: "Suplementace vitaminem D a omega-3", f: "Závažných příhod stejně; infarktů o 28 % méně" },
+    "2011": { title: "Minimální množství pohybu pro nižší úmrtnost", f: "15 min denně: o 14 % nižší úmrtnost, +3 roky" },
+    "2000": { title: "Fyziologické reakce člověka na ponoření do vody různé teploty", f: "Voda 14 °C: noradrenalin +530 %" },
   },
 
 };
