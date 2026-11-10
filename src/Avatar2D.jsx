@@ -60,7 +60,7 @@ function targetParams(inputs, gained) {
 
 /* plynulé dojíždění všech hodnot (lerp po snímcích) */
 function useSmooth(target) {
-  var _s = useState(target), val = _s[0], setVal = _s[1];
+  var [val, setVal] = useState(target);
   var ref = useRef(target);
   useEffect(function () {
     var raf;
@@ -83,15 +83,12 @@ function useSmooth(target) {
 }
 
 export default function Avatar2D({ inputs, gained, height }) {
-  var sig = [inputs.age, inputs.sex, inputs.exerciseDays, inputs.exerciseIntensity, inputs.saunaSessions,
-    inputs.dietScore, inputs.sleepScore, inputs.supplementScore, inputs.socialScore,
-    inputs.coldExposure, inputs.smokingStatus, inputs.alcoholScore, gained].join("|");
-  var target = useMemo(function () { return targetParams(inputs, gained || 0); }, [sig]);
+  var target = useMemo(function () { return targetParams(inputs, gained || 0); }, [inputs, gained]);
   var p = useSmooth(target);
   var uid = useMemo(function () { return "av" + Math.random().toString(36).slice(2, 7); }, []);
 
   /* mrkání */
-  var _b = useState(false), blink = _b[0], setBlink = _b[1];
+  var [blink, setBlink] = useState(false);
   useEffect(function () {
     var to, iv = setInterval(function () {
       setBlink(true); to = setTimeout(function () { setBlink(false); }, 130);
@@ -422,13 +419,13 @@ export default function Avatar2D({ inputs, gained, height }) {
 
       <div style={{ display: "flex", justifyContent: "center", gap: 18 }}>
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#8EAABB", fontFamily: "'JetBrains Mono',monospace" }}>KALENDÁŘNÍ</div>
+          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#4F7085", fontFamily: "'JetBrains Mono',monospace" }}>KALENDÁŘNÍ</div>
           <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: "#1A3A52" }}>{inputs.age}</div>
         </div>
         <div style={{ width: 1, background: "rgba(140,170,200,0.25)" }} />
         <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#8EAABB", fontFamily: "'JetBrains Mono',monospace" }}>BIOLOGICKÝ</div>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: p.bioAge <= inputs.age ? "#2BA87D" : "#D95843" }}>{Math.round(p.bioAge)}</div>
+          <div style={{ fontSize: 9, letterSpacing: 1.5, color: "#4F7085", fontFamily: "'JetBrains Mono',monospace" }}>BIOLOGICKÝ</div>
+          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontWeight: 700, fontSize: 16, color: p.bioAge <= inputs.age ? "#1B7D58" : "#C2412E" }}>{Math.round(p.bioAge)}</div>
         </div>
       </div>
     </div>
