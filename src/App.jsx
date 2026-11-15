@@ -1,9 +1,48 @@
-import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback, createContext, useContext, lazy, Suspense } from "react";
 import { UI, CS, BIOUI } from "./content-cs.js";
 
 var LangCtx = createContext("cs");
 function useUI() { var l = useContext(LangCtx); return { lang: l, U: UI[l], cs: l === "cs" }; }
 import Avatar2D from "./Avatar2D.jsx";
+var Avatar3D = lazy(function () { return import("./Avatar3D.jsx"); });
+
+/* 3D avatar when the device can do it; the 2D one stays as the placeholder and the fallback
+   (no WebGL 2, reduced motion, or the model fails to load). */
+function canUse3D() {
+  try {
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return false;
+    return !!document.createElement("canvas").getContext("webgl2");
+  } catch { return false; }
+}
+function AvatarStage({ inputs, gained, cs }) {
+  var ref = useRef(null);
+  var [near, setNear] = useState(false);
+  var [ok3d] = useState(canUse3D);
+  var [ready, setReady] = useState(false);
+  var [failed, setFailed] = useState(false);
+  useEffect(function () {
+    if (!ok3d || near) return undefined;
+    var io = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { setNear(true); io.disconnect(); } }, { rootMargin: "600px" });
+    io.observe(ref.current);
+    return function () { io.disconnect(); };
+  }, [ok3d, near]);
+  var show3d = ok3d && near && !failed;
+  var label = cs ? "3D postava, která se mění podle tvých odpovědí" : "3D figure that changes with your answers";
+  return (
+    <div ref={ref} style={{ position: "relative" }}>
+      {!ready && <Avatar2D inputs={inputs} gained={gained} />}
+      {show3d && (
+        <div style={{ position: ready ? "relative" : "absolute", inset: 0, opacity: ready ? 1 : 0, transition: "opacity .6s ease" }}>
+          <Suspense fallback={null}>
+            <Avatar3D inputs={inputs} gained={gained} height={380} label={label}
+              onReady={function () { setReady(true); }} onFail={function () { setFailed(true); setReady(false); }} />
+          </Suspense>
+        </div>
+      )}
+      {ready && <div style={{ fontSize: 11, color: T.dim, marginTop: 4 }}>{cs ? "Táhni do strany pro otočení" : "Drag sideways to turn"}</div>}
+    </div>
+  );
+}
 import { DEFAULT_INPUTS, calcLifespan, r1, sanitizeInputs } from "./model.js";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -800,7 +839,7 @@ export default function App() {
               {/* character */}
               <div style={{ ...gc("20px 20px 12px"), textAlign: "center", marginBottom: 14 }}>
                 <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: 2, color: T.dim, marginBottom: 8 }}>{U.calc.avatar}</div>
-                <Avatar2D inputs={inputs} gained={gained} />
+                <AvatarStage inputs={inputs} gained={gained} cs={cs} />
                 <div style={{ fontSize: 11, color: T.dim, marginTop: 8, fontStyle: "italic" }}>{U.calc.avatarNote}</div>
               </div>
 
