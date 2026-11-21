@@ -28,8 +28,11 @@ npm test         # testy modelu kalkulačky
 - `src/Avatar3D.jsx` — realistická 3D postava (three.js), která reaguje na posuvníky. Načítá se až u kalkulačky;
   bez WebGL 2, při omezeném pohybu nebo při chybě načítání zůstává `src/Avatar2D.jsx` (SVG).
 - `src/avatar-params.js` — jak odpovědi mění vzhled postavy (sdílí 2D i 3D).
-- `public/models/avatar-*.glb` — 3D postavy (muž, žena) s tvary svaly / ochablost / váha / štíhlost / stáří /
-  úsměv / smutek / únava. Vyrábí je `blender/build_avatar.py` (viz níže). Autoři v `public/models/CREDITS.md`.
+- `public/models/avatar-<pohlaví>-<styl>.glb` — 3D postavy (muž, žena × sportovec, právník, gangster) s tvary
+  svaly / ochablost / váha / štíhlost / stáří / úsměv / smutek / únava, kostrou, rekvizitami v rukou
+  (cigareta, doutník, e-cigareta, pivo, víno, whisky, panák) a animacemi `smoke` a `drink`. Vyrábí je
+  `blender/build_avatar.py` (viz níže). Autoři v `public/models/CREDITS.md`. Styl si návštěvník vybere nad
+  postavou (pamatuje se v prohlížeči); kouření a pití se ukáže podle posuvníků a typ podle stylu.
 - `public/og.png` — náhled pro sdílení (1200×630).
 
 ## Pravidla pro obsah
@@ -44,8 +47,9 @@ Potřebuješ Blender 5 s rozšířením MPFB (MakeHuman pro Blender) a jeho bal�
 v `~/dev/longevityclinic/blender`.
 
 ```bash
-/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_avatar.py               # obě postavy (~3 min)
-/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_avatar.py -- --sex female --preview
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_avatar.py                    # všech 6 postav (~2 min)
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_avatar.py -- --sex female --style lawyer --preview
+/Applications/Blender.app/Contents/MacOS/Blender -b --factory-startup -P blender/build_avatar.py -- --quick --preview  # bez tvarů těla, rychlá kontrola
 ```
 
 `--preview` uloží náhledy všech tvarů do `blender/previews/` (není v gitu).

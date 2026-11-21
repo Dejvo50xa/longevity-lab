@@ -14,12 +14,25 @@ function canUse3D() {
     return !!document.createElement("canvas").getContext("webgl2");
   } catch { return false; }
 }
+var STYLE_KEY = "ll-avatar-style";
+var STYLE_LABELS = {
+  cs: { male: ["Sportovec", "Právník", "Gangster"], female: ["Sportovkyně", "Právnička", "Gangsterka"] },
+  en: { male: ["Athlete", "Lawyer", "Gangster"], female: ["Athlete", "Lawyer", "Gangster"] },
+};
+var STYLE_IDS = ["sport", "lawyer", "gangster"];
 function AvatarStage({ inputs, gained, cs }) {
   var ref = useRef(null);
   var [near, setNear] = useState(false);
   var [ok3d] = useState(canUse3D);
   var [ready, setReady] = useState(false);
   var [failed, setFailed] = useState(false);
+  var [style, setStyle] = useState(function () {
+    try { var v = localStorage.getItem(STYLE_KEY); return STYLE_IDS.indexOf(v) >= 0 ? v : "sport"; } catch { return "sport"; }
+  });
+  function pick(v) {
+    setStyle(v);
+    try { localStorage.setItem(STYLE_KEY, v); } catch { /* private mode: just don't remember */ }
+  }
   useEffect(function () {
     if (!ok3d || near) return undefined;
     var io = new IntersectionObserver(function (e) { if (e[0].isIntersecting) { setNear(true); io.disconnect(); } }, { rootMargin: "600px" });
@@ -28,13 +41,28 @@ function AvatarStage({ inputs, gained, cs }) {
   }, [ok3d, near]);
   var show3d = ok3d && near && !failed;
   var label = cs ? "3D postava, která se mění podle tvých odpovědí" : "3D figure that changes with your answers";
+  var names = STYLE_LABELS[cs ? "cs" : "en"][inputs.sex === "female" ? "female" : "male"];
   return (
     <div ref={ref} style={{ position: "relative" }}>
+      {show3d && ready && (
+        <div role="radiogroup" aria-label={cs ? "Oblečení postavy" : "Figure's outfit"} style={{ display: "flex", gap: 6, justifyContent: "center", marginBottom: 6 }}>
+          {STYLE_IDS.map(function (id, i) {
+            var on = style === id;
+            return (
+              <button key={id} type="button" role="radio" aria-checked={on} onClick={function () { pick(id); }}
+                style={{ fontFamily: T.sans, fontSize: 12, fontWeight: 600, padding: "6px 12px", minHeight: 32, borderRadius: 999, cursor: "pointer",
+                  border: "1px solid " + (on ? T.mid : T.glassBorderHover), background: on ? T.mid : T.white, color: on ? T.white : T.mid }}>
+                {names[i]}
+              </button>
+            );
+          })}
+        </div>
+      )}
       {!ready && <Avatar2D inputs={inputs} gained={gained} />}
       {show3d && (
         <div style={{ position: ready ? "relative" : "absolute", inset: 0, opacity: ready ? 1 : 0, transition: "opacity .6s ease" }}>
           <Suspense fallback={null}>
-            <Avatar3D inputs={inputs} gained={gained} height={380} label={label}
+            <Avatar3D inputs={inputs} gained={gained} style={style} height={380} label={label}
               onReady={function () { setReady(true); }} onFail={function () { setFailed(true); setReady(false); }} />
           </Suspense>
         </div>
